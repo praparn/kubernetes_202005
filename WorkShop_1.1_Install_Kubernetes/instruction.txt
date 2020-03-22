@@ -8,11 +8,11 @@ Link for download:
 
 4. Clone workshop to aws machine by command: 
     cd ~/
-    git clone https://github.com/praparn/praparn-kubernetes_202005.git
+    git clone https://github.com/praparn/kubernetes_202005.git
 
 5. Initial kubernetes by command:
     sudo su -
-    kubeadm init --config /home/ubuntu/praparn-kubernetes_202005/WorkShop_1.1_Install_Kubernetes/kubeadm-init-basic.yaml
+    kubeadm init --config /home/ubuntu/kubernetes_202005/WorkShop_1.1_Install_Kubernetes/kubeadm-init-basic.yaml
     exit
    /* SKIP:
     kubeadm init --kubernetes-version=v1.17.0 --pod-network-cidr=192.168.0.0/16 \
