@@ -7,15 +7,12 @@ bootstrapTokens:
   - signing
   - authentication
 kind: InitConfiguration
-nodeRegistration:
-  kubeletExtraArgs:
-    "feture-gates": "HugePages=true,RotateKubeletClientCertificate=true,RotateKubeletServerCertificate=true,TTLAfterFinished=true,EphemeralContainers=true"
 localAPIEndpoint:
   bindPort: 6443
 nodeRegistration:
   criSocket: /var/run/dockershim.sock
-  #name: hostnamemaster
   kubeletExtraArgs:
+    "feture-gates": "HugePages=true,RotateKubeletClientCertificate=true,RotateKubeletServerCertificate=true,TTLAfterFinished=true,EphemeralContainers=true"
     cloud-provider: aws
   taints:
   - effect: NoSchedule
