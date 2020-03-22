@@ -12,7 +12,7 @@ localAPIEndpoint:
 nodeRegistration:
   criSocket: /var/run/dockershim.sock
   kubeletExtraArgs:
-    "feture-gates": "HugePages=true,RotateKubeletClientCertificate=true,RotateKubeletServerCertificate=true,TTLAfterFinished=true,EphemeralContainers=true"
+    "feature-gates": "HugePages=true,RotateKubeletClientCertificate=true,RotateKubeletServerCertificate=true,TTLAfterFinished=true,EphemeralContainers=true"
     cloud-provider: aws
   taints:
   - effect: NoSchedule
@@ -30,7 +30,7 @@ clusterName: KubernetesLab
 controlPlaneEndpoint: ""
 controllerManager:
   extraArgs:
-    "feture-gates": "HugePages=true,RotateKubeletClientCertificate=true,RotateKubeletServerCertificate=true,TTLAfterFinished=true,EphemeralContainers=true"
+    "feature-gates": "HugePages=true,RotateKubeletClientCertificate=true,RotateKubeletServerCertificate=true,TTLAfterFinished=true,EphemeralContainers=true"
 dns:
   type: CoreDNS
 etcd:
@@ -45,4 +45,4 @@ networking:
   serviceSubnet: 10.96.0.0/12
 scheduler:
   extraArgs:
-    "feture-gates": "RotateKubeletClientCertificate=true,RotateKubeletServerCertificate=true,TTLAfterFinished=true,EphemeralContainers=true"
+    "feature-gates": "RotateKubeletClientCertificate=true,RotateKubeletServerCertificate=true,TTLAfterFinished=true,EphemeralContainers=true"
