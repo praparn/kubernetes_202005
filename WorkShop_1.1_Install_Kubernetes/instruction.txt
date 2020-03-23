@@ -12,24 +12,46 @@ Link for download:
 
 5. Initial kubernetes by command:
     sudo su -
-    kubeadm init --config /home/ubuntu/kubernetes_202005/WorkShop_1.1_Install_Kubernetes/kubeadm-init-basic.yaml
+    kubeadm init --kubernetes-version=v1.17.0 --pod-network-cidr=192.168.0.0/16 --token-ttl 1h
     exit
-   /* SKIP:
-    kubeadm init --kubernetes-version=v1.17.0 --pod-network-cidr=192.168.0.0/16 \
-    --token-ttl 1h --feature-gates="RotateKubeletClientCertificate=true,RotateKubeletServerCertificate=true,TTLAfterFinished=true,DynamicKubeletConfig=true"
-    exit
-    */
 
-5. Setup credential for regular user by command:
+6. Setup credential for regular user by command:
     cd ~/
    	mkdir -p $HOME/.kube
     sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
   	sudo chown $(id -u):$(id -g) $HOME/.kube/config
 	kubectl taint nodes --all node-role.kubernetes.io/master-
 
-6. Install network component by command:
+7. Install network component by command:
     kubectl apply -f https://docs.projectcalico.org/v3.11/manifests/calico.yaml
     watch kubectl get pods --all-namespaces
+
+8. Tunning Feature-Gate Configuration:
+    Controller Server: sudo vi /etc/kubernetes/manifests/kube-controller-manager.yaml
+        --feature-gates=RotateKubeletServerCertificate=true
+    sudo kubectl apply -f /etc/kubernetes/manifests/kube-controller-manager.yaml
+
+    Kubelet Engine: sudo vi /var/lib/kubelet/kubeadm-flags.env
+        KUBELET_CERTIFICATE_ARGS="--feature-gates=RotateKubeletServerCertificate=true"
+    sudo systemctl daemon-reload && sudo systemctl restart kubelet.service
+
+
+    API Server: sudo vi /etc/kubernetes/manifests/kube-apiserver.yaml
+        --feature-gates=HugePages=true
+        --feature-gates=RotateKubeletClientCertificate=true
+        --feature-gates=RotateKubeletServerCertificate=true
+        TTLAfterFinished=true,EphemeralContainers=true
+    sudo kubectl apply -f /etc/kubernetes/manifests/kube-apiserver.yaml
+
+    
+    Seheduler Server: sudo vi /etc/kubernetes/manifests/kube-scheduler.yaml
+        --feature-gates=HugePages=true,RotateKubeletClientCertificate=true,RotateKubeletServerCertificate=true,TTLAfterFinished=true,EphemeralContainers=true
+
+
+    Kubelet: sudo vi /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+    sudo systemctl daemon-reload systemctl && sudo restart kubelet.service
+
+
 
 7. Test deploy application by command:
     kubectl run webtest --image=labdocker/nginx:http2 --port=443
