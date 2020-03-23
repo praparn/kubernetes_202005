@@ -21,7 +21,7 @@ apiServer:
   extraArgs:
     authorization-mode: Node,RBAC
     enable-admission-plugins: NamespaceLifecycle,LimitRanger,ServiceAccount,TaintNodesByCondition,Priority,DefaultTolerationSeconds,DefaultStorageClass,StorageObjectInUseProtection,PersistentVolumeClaimResize,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,RuntimeClass,ResourceQuota
-    "feature-gates": "AllAlpha=true, RotateKubeletClientCertificate=true, RotateKubeletServerCertificate=true, TTLAfterFinished=true, EphemeralContainers=true"
+    feature-gates: "RotateKubeletClientCertificate=true, RotateKubeletServerCertificate=true, TTLAfterFinished=true, EphemeralContainers=true"
   timeoutForControlPlane: 4m0s
 apiVersion: kubeadm.k8s.io/v1beta2
 certificatesDir: /etc/kubernetes/pki
@@ -29,7 +29,7 @@ clusterName: KubernetesLab
 controlPlaneEndpoint: ""
 controllerManager:
   extraArgs:
-    "feature-gates": "AllAlpha=true, RotateKubeletClientCertificate=true, RotateKubeletServerCertificate=true, TTLAfterFinished=true, EphemeralContainers=true"
+    feature-gates: "RotateKubeletClientCertificate=true, RotateKubeletServerCertificate=true, TTLAfterFinished=true, EphemeralContainers=true"
 dns:
   type: CoreDNS
 etcd:
@@ -44,4 +44,4 @@ networking:
   serviceSubnet: 10.96.0.0/12
 scheduler:
   extraArgs:
-    "feature-gates": "AllAlpha=true, RotateKubeletClientCertificate=true, RotateKubeletServerCertificate=true, TTLAfterFinished=true, EphemeralContainers=true"
+    feature-gates: "RotateKubeletClientCertificate=true, RotateKubeletServerCertificate=true, TTLAfterFinished=true, EphemeralContainers=true"
