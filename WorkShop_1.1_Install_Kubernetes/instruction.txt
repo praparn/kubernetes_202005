@@ -34,7 +34,7 @@ Link for download:
 7. Test deploy application by command:
     kubectl run webtest --image=labdocker/nginx:http2 --port=443
     kubectl get pods -o wide
-    kubectl expose deployment webtest --target-port=443 --type=NodePort
+    kubectl expose pods webtest --target-port=443 --type=NodePort
     kubectl get svc -o wide                                               ==> Record Public Port
 
 8. Test access web endpoint by command:
@@ -43,7 +43,7 @@ Link for download:
     curl https://<Public IP>:<Port>
 
 9. Clear up lab by command:
-    kubectl delete deployment/webtest
+    kubectl delete pods/webtest
     kubectl delete svc/webtest
 
 11. Now all workshop is on "/home/ubuntu/kubernetes_202005"

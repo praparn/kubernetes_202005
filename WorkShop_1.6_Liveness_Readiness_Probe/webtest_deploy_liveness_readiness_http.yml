@@ -40,6 +40,9 @@ spec:
               #schema: HTTPS
               path: /
               port: webservice
+              httpHeaders:
+              - name: Server
+                value: Werkzeug/0.12.2 Python/2.7.13
             initialDelaySeconds: 15
             periodSeconds: 5
             timeoutSeconds: 10
@@ -52,6 +55,9 @@ spec:
               #schema: HTTPS
               path: /
               port: webservice
+              httpHeaders:
+              - name: Server
+                value: Werkzeug/0.12.2 Python/2.7.13
             initialDelaySeconds: 15
             periodSeconds: 30
             timeoutSeconds: 30
