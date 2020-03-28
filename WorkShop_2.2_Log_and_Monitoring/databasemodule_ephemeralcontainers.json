@@ -15,7 +15,7 @@
         "command": [
             "sh"
         ],
-        "image": "busybox",
+        "image": "alpine:latest",
         "imagePullPolicy": "IfNotPresent",
         "name": "debugger",
         "stdin": true,

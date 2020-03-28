@@ -29,7 +29,9 @@ Part1: Container Logging:
 	kubectl logs pods/<pods name> -c maindb
 
 8. Checl Log of Ephemeralcontainers by command:
-	kubectl logs pods/debugger
+	kubectl attach -it pods/<pods name> -c debugger
+	telnet maindb 3306
+	
 
 9. Test delete pods of "maindb" by command
 	kubectl delete pods/<pods name>

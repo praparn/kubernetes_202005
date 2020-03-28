@@ -30,6 +30,8 @@ Link for download:
     Controller Server: ps -ef | grep kube-controller-manager | grep feature-gate
     API Server: ps -ef | grep kube-apiserver | grep feature-gate
     Scheduler: ps -ef | grep kube-scheduler | grep feature-gate
+    Kubelet: ps -ef | grep /usr/bin/kubelet | grep feature-gate
+
 
 9. Check Existing Certificate and CSR:
     sudo find /etc/kubernetes/pki/ -type f -name "*.crt" -print|egrep -v 'ca.crt$'|xargs -L 1 -t  -i bash -c 'openssl x509  -noout -text -in {}|grep After'
