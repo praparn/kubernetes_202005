@@ -37,7 +37,7 @@ local function fetch_request_body()
   return body
 end
 
-function _M.get_pem_cert_key(hostname)
+local function get_pem_cert(hostname)
   local uid = certificate_servers:get(hostname)
   if not uid then
     return nil
@@ -143,7 +143,7 @@ local function handle_certs()
     return
   end
 
-  local key = _M.get_pem_cert_key(query["hostname"])
+  local key = get_pem_cert(query["hostname"])
   if key then
     ngx.status = ngx.HTTP_OK
     ngx.print(key)
@@ -153,6 +153,31 @@ local function handle_certs()
     ngx.print("No key associated with this hostname.")
     return
   end
+end
+
+
+local function handle_backends()
+  if ngx.var.request_method == "GET" then
+    ngx.status = ngx.HTTP_OK
+    ngx.print(_M.get_backends_data())
+    return
+  end
+
+  local backends = fetch_request_body()
+  if not backends then
+    ngx.log(ngx.ERR, "dynamic-configuration: unable to read valid request body")
+    ngx.status = ngx.HTTP_BAD_REQUEST
+    return
+  end
+
+  local success, err = configuration_data:set("backends", backends)
+  if not success then
+    ngx.log(ngx.ERR, "dynamic-configuration: error updating configuration: " .. tostring(err))
+    ngx.status = ngx.HTTP_BAD_REQUEST
+    return
+  end
+
+  ngx.status = ngx.HTTP_CREATED
 end
 
 function _M.call()
@@ -177,33 +202,13 @@ function _M.call()
     return
   end
 
-  if ngx.var.request_uri ~= "/configuration/backends" then
-    ngx.status = ngx.HTTP_NOT_FOUND
-    ngx.print("Not found!")
+  if ngx.var.request_uri == "/configuration/backends" then
+    handle_backends()
     return
   end
 
-  if ngx.var.request_method == "GET" then
-    ngx.status = ngx.HTTP_OK
-    ngx.print(_M.get_backends_data())
-    return
-  end
-
-  local backends = fetch_request_body()
-  if not backends then
-    ngx.log(ngx.ERR, "dynamic-configuration: unable to read valid request body")
-    ngx.status = ngx.HTTP_BAD_REQUEST
-    return
-  end
-
-  local success, err = configuration_data:set("backends", backends)
-  if not success then
-    ngx.log(ngx.ERR, "dynamic-configuration: error updating configuration: " .. tostring(err))
-    ngx.status = ngx.HTTP_BAD_REQUEST
-    return
-  end
-
-  ngx.status = ngx.HTTP_CREATED
+  ngx.status = ngx.HTTP_NOT_FOUND
+  ngx.print("Not found!")
 end
 
 if _TEST then

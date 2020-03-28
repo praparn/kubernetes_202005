@@ -31,11 +31,14 @@
       --user $(gcloud config get-value account)
     ```
 
-The following **Mandatory Command** is required for all deployments.
+The following **Mandatory Command** is required for all deployments except [minikube](#minikube).
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/mandatory.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/mandatory.yaml
 ```
+
+!!! tip
+    If you are using a Kubernetes version previous to 1.14, you need to change `kubernetes.io/os` to `beta.kubernetes.io/os` at line 217 of [mandatory.yaml](https://github.com/kubernetes/ingress-nginx/blob/master/deploy/static/mandatory.yaml#L217), see [Labels details](https://kubernetes.io/docs/reference/kubernetes-api/labels-annotations-taints/).
 
 ### Provider Specific Steps
 
@@ -50,7 +53,7 @@ Kubernetes is available in Docker for Mac (from [version 18.06.0-ce](https://doc
 Create a service
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/cloud-generic.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/provider/cloud-generic.yaml
 ```
 
 #### minikube
@@ -75,7 +78,6 @@ minikube addons disable ingress
 ```console
 $ kubectl get pods -n ingress-nginx
 NAME                                       READY     STATUS    RESTARTS   AGE
-default-http-backend-66b447d9cf-rrlf9      1/1       Running   0          12s
 nginx-ingress-controller-fdcdcd6dd-vvpgs   1/1       Running   0          11s
 ```
 
@@ -99,8 +101,8 @@ Check that no change is necessary with regards to the ELB idle timeout. In some 
 Then execute:
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/aws/service-l4.yaml
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/aws/patch-configmap-l4.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/provider/aws/service-l4.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/provider/aws/patch-configmap-l4.yaml
 ```
 
 For L7:
@@ -112,8 +114,8 @@ Check that no change is necessary with regards to the ELB idle timeout. In some 
 Then execute:
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/aws/service-l7.yaml
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/aws/patch-configmap-l7.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/provider/aws/service-l7.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/provider/aws/patch-configmap-l7.yaml
 ```
 
 This example creates an ELB with just two listeners, one in port 80 and another in port 443
@@ -134,13 +136,13 @@ More information with regards to idle timeouts for your Load Balancer can be fou
 This type of load balancer is supported since v1.10.0 as an ALPHA feature.
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/aws/service-nlb.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/provider/aws/service-nlb.yaml
 ```
 
 #### GCE-GKE
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/cloud-generic.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/provider/cloud-generic.yaml
 ```
 
 **Important Note:** proxy protocol is not supported in GCE/GKE
@@ -148,7 +150,7 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/mast
 #### Azure
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/cloud-generic.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/provider/cloud-generic.yaml
 ```
 
 #### Bare-metal
@@ -156,7 +158,7 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/mast
 Using [NodePort](https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport):
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/baremetal/service-nodeport.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/provider/baremetal/service-nodeport.yaml
 ```
 
 !!! tip
@@ -190,11 +192,21 @@ NGINX Ingress controller can be installed via [Helm](https://helm.sh/) using the
 To install the chart with the release name `my-nginx`:
 
 ```console
-helm install stable/nginx-ingress --name my-nginx
+helm install my-nginx stable/nginx-ingress
 ```
 
 If the kubernetes cluster has RBAC enabled, then run:
 
+```console
+helm install my-nginx stable/nginx-ingress --set rbac.create=true
+```
+
+If you are using [Helm 2](https://v2.helm.sh/) then specify release name using `--name` flag
+
+```console
+helm install stable/nginx-ingress --name my-nginx
+```
+or
 ```console
 helm install stable/nginx-ingress --name my-nginx --set rbac.create=true
 ```

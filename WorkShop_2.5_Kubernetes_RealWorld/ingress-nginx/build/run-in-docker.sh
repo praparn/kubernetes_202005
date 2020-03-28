@@ -25,12 +25,16 @@ set -o pipefail
 # temporal directory for the /etc/ingress-controller directory
 INGRESS_VOLUME=$(mktemp -d)
 
+if [[ "$OSTYPE" == darwin* ]]; then
+  INGRESS_VOLUME=/private$INGRESS_VOLUME
+fi
+
 function cleanup {
   rm -rf "${INGRESS_VOLUME}"
 }
 trap cleanup EXIT
 
-E2E_IMAGE=quay.io/kubernetes-ingress-controller/e2e:v09052019-38b985663
+E2E_IMAGE=quay.io/kubernetes-ingress-controller/e2e:v03242020-d8ecfb732
 
 DOCKER_OPTS=${DOCKER_OPTS:-}
 
@@ -39,14 +43,13 @@ KUBE_ROOT=$(cd $(dirname "${BASH_SOURCE}")/.. && pwd -P)
 FLAGS=$@
 
 PKG=k8s.io/ingress-nginx
-ARCH=$(go env GOARCH)
-
-MINIKUBE_PATH=${HOME}/.minikube
-MINIKUBE_VOLUME="-v ${MINIKUBE_PATH}:${MINIKUBE_PATH}"
-if [ ! -d "${MINIKUBE_PATH}" ]; then
-  echo "Minikube directory not found! Volume will be excluded from docker build."
-  MINIKUBE_VOLUME=""
+ARCH=${ARCH:-}
+if [[ -z "$ARCH" ]]; then
+  ARCH=$(go env GOARCH)
 fi
+
+# create output directory as current user to avoid problem with docker.
+mkdir -p "${KUBE_ROOT}/bin" "${KUBE_ROOT}/bin/${ARCH}"
 
 docker run                                            \
   --tty                                               \
@@ -54,12 +57,12 @@ docker run                                            \
   ${DOCKER_OPTS}                                      \
   -e GOCACHE="/go/src/${PKG}/.cache"                  \
   -e GO111MODULE=off                                  \
+  -e DIND_TASKS=0                                     \
   -v "${HOME}/.kube:${HOME}/.kube"                    \
   -v "${KUBE_ROOT}:/go/src/${PKG}"                    \
   -v "${KUBE_ROOT}/bin/${ARCH}:/go/bin/linux_${ARCH}" \
   -v "/var/run/docker.sock:/var/run/docker.sock"      \
   -v "${INGRESS_VOLUME}:/etc/ingress-controller/"     \
-  ${MINIKUBE_VOLUME}                                  \
   -w "/go/src/${PKG}"                                 \
   -u $(id -u ${USER}):$(id -g ${USER})                \
   ${E2E_IMAGE} /bin/bash -c "${FLAGS}"

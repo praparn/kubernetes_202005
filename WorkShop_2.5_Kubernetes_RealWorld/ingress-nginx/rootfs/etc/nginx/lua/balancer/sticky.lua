@@ -2,6 +2,7 @@ local balancer_resty = require("balancer.resty")
 local ck = require("resty.cookie")
 local ngx_balancer = require("ngx.balancer")
 local split = require("util.split")
+local same_site = require("util.same_site")
 
 local _M = balancer_resty:new()
 local DEFAULT_COOKIE_NAME = "route"
@@ -43,11 +44,22 @@ function _M.set_cookie(self, value)
     cookie_path = ngx.var.location_path
   end
 
+  local cookie_samesite = self.cookie_session_affinity.samesite
+  if cookie_samesite then
+    local cookie_conditional_samesite_none = self.cookie_session_affinity.conditional_samesite_none
+    if cookie_conditional_samesite_none
+        and cookie_samesite == "None"
+        and not same_site.same_site_none_compatible(ngx.var.http_user_agent) then
+      cookie_samesite = nil
+    end
+  end
+
   local cookie_data = {
     key = self:cookie_name(),
     value = value,
     path = cookie_path,
     httponly = true,
+    samesite = cookie_samesite,
     secure = ngx.var.https == "on",
   }
 
@@ -82,11 +94,16 @@ local function get_failed_upstreams()
 end
 
 local function should_set_cookie(self)
-  if self.cookie_session_affinity.locations and ngx.var.host then
-    local locs = self.cookie_session_affinity.locations[ngx.var.host]
+  local host = ngx.var.host
+  if ngx.var.server_name == '_' then
+    host = ngx.var.server_name
+  end
+
+  if self.cookie_session_affinity.locations then
+    local locs = self.cookie_session_affinity.locations[host]
     if locs == nil then
       -- Based off of wildcard hostname in ../certificate.lua
-      local wildcard_host, _, err = ngx.re.sub(ngx.var.host, "^[^\\.]+\\.", "*.", "jo")
+      local wildcard_host, _, err = ngx.re.sub(host, "^[^\\.]+\\.", "*.", "jo")
       if err then
         ngx.log(ngx.ERR, "error: ", err);
       elseif wildcard_host then

@@ -17,35 +17,34 @@ limitations under the License.
 package settings
 
 import (
+	"context"
 	"net/http"
 	"strings"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	"github.com/parnurzeal/gorequest"
+	"github.com/onsi/ginkgo"
+	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Ingress class", func() {
+var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 	f := framework.NewDefaultFramework("ingress-class")
 
-	BeforeEach(func() {
+	ginkgo.BeforeEach(func() {
 		f.NewEchoDeploymentWithReplicas(1)
 	})
 
-	AfterEach(func() {
-	})
+	ginkgo.Context("Without a specific ingress-class", func() {
 
-	Context("Without a specific ingress-class", func() {
-
-		It("should ignore Ingress with class", func() {
+		ginkgo.It("should ignore Ingress with class", func() {
 			invalidHost := "foo"
 			annotations := map[string]string{
-				"kubernetes.io/ingress.class": "testclass",
+				class.IngressKey: "testclass",
 			}
-			ing := framework.NewSingleIngress(invalidHost, "/", invalidHost, f.Namespace, framework.EchoService, 80, &annotations)
+			ing := framework.NewSingleIngress(invalidHost, "/", invalidHost, f.Namespace, framework.EchoService, 80, annotations)
 			f.EnsureIngress(ing)
 
 			validHost := "bar"
@@ -57,36 +56,35 @@ var _ = framework.IngressNginxDescribe("Ingress class", func() {
 					strings.Contains(cfg, "server_name bar")
 			})
 
-			resp, _, errs := gorequest.New().
-				Get(f.GetURL(framework.HTTP)).
-				Set("Host", invalidHost).
-				End()
-			Expect(errs).To(BeNil())
-			Expect(resp.StatusCode).Should(Equal(http.StatusNotFound))
+			f.HTTPTestClient().
+				GET("/").
+				WithHeader("Host", invalidHost).
+				Expect().
+				Status(http.StatusNotFound)
 
-			resp, _, errs = gorequest.New().
-				Get(f.GetURL(framework.HTTP)).
-				Set("Host", validHost).
-				End()
-			Expect(errs).To(BeNil())
-			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+			f.HTTPTestClient().
+				GET("/").
+				WithHeader("Host", validHost).
+				Expect().
+				Status(http.StatusOK)
 		})
 	})
 
-	Context("With a specific ingress-class", func() {
-		BeforeEach(func() {
-			framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 1,
+	ginkgo.Context("With a specific ingress-class", func() {
+		ginkgo.BeforeEach(func() {
+			err := framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 1,
 				func(deployment *appsv1.Deployment) error {
 					args := deployment.Spec.Template.Spec.Containers[0].Args
 					args = append(args, "--ingress-class=testclass")
 					deployment.Spec.Template.Spec.Containers[0].Args = args
-					_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(deployment)
+					_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
 
 					return err
 				})
+			assert.Nil(ginkgo.GinkgoT(), err, "updating ingress controller deployment flags")
 		})
 
-		It("should ignore Ingress with no class", func() {
+		ginkgo.It("should ignore Ingress with no class", func() {
 			invalidHost := "bar"
 
 			ing := framework.NewSingleIngress(invalidHost, "/", invalidHost, f.Namespace, framework.EchoService, 80, nil)
@@ -94,9 +92,9 @@ var _ = framework.IngressNginxDescribe("Ingress class", func() {
 
 			validHost := "foo"
 			annotations := map[string]string{
-				"kubernetes.io/ingress.class": "testclass",
+				class.IngressKey: "testclass",
 			}
-			ing = framework.NewSingleIngress(validHost, "/", validHost, f.Namespace, framework.EchoService, 80, &annotations)
+			ing = framework.NewSingleIngress(validHost, "/", validHost, f.Namespace, framework.EchoService, 80, annotations)
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxServer(validHost, func(cfg string) bool {
@@ -107,54 +105,53 @@ var _ = framework.IngressNginxDescribe("Ingress class", func() {
 				return !strings.Contains(cfg, "server_name bar")
 			})
 
-			resp, _, errs := gorequest.New().
-				Get(f.GetURL(framework.HTTP)).
-				Set("Host", validHost).
-				End()
-			Expect(errs).To(BeNil())
-			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+			f.HTTPTestClient().
+				GET("/").
+				WithHeader("Host", validHost).
+				Expect().
+				Status(http.StatusOK)
 
-			resp, _, errs = gorequest.New().
-				Get(f.GetURL(framework.HTTP)).
-				Set("Host", invalidHost).
-				End()
-			Expect(errs).To(BeNil())
-			Expect(resp.StatusCode).Should(Equal(http.StatusNotFound))
+			f.HTTPTestClient().
+				GET("/").
+				WithHeader("Host", invalidHost).
+				Expect().
+				Status(http.StatusNotFound)
 		})
 
-		It("should delete Ingress when class is removed", func() {
+		ginkgo.It("should delete Ingress when class is removed", func() {
 			host := "foo"
 			annotations := map[string]string{
-				"kubernetes.io/ingress.class": "testclass",
+				class.IngressKey: "testclass",
 			}
-			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, &annotations)
-			ing = f.EnsureIngress(ing)
+			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+			f.EnsureIngress(ing)
 
 			f.WaitForNginxServer(host, func(cfg string) bool {
 				return strings.Contains(cfg, "server_name foo")
 			})
 
-			resp, _, errs := gorequest.New().
-				Get(f.GetURL(framework.HTTP)).
-				Set("Host", host).
-				End()
-			Expect(errs).To(BeNil())
-			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+			f.HTTPTestClient().
+				GET("/").
+				WithHeader("Host", host).
+				Expect().
+				Status(http.StatusOK)
 
-			delete(ing.Annotations, "kubernetes.io/ingress.class")
-			f.EnsureIngress(ing)
+			ing, err := f.KubeClientSet.NetworkingV1beta1().Ingresses(f.Namespace).Get(context.TODO(), host, metav1.GetOptions{})
+			assert.Nil(ginkgo.GinkgoT(), err)
+
+			delete(ing.Annotations, class.IngressKey)
+			_, err = f.KubeClientSet.NetworkingV1beta1().Ingresses(ing.Namespace).Update(context.TODO(), ing, metav1.UpdateOptions{})
+			assert.Nil(ginkgo.GinkgoT(), err)
 
 			f.WaitForNginxConfiguration(func(cfg string) bool {
 				return !strings.Contains(cfg, "server_name foo")
 			})
 
-			resp, _, errs = gorequest.New().
-				Get(f.GetURL(framework.HTTP)).
-				Set("Host", host).
-				End()
-			Expect(errs).To(BeNil())
-			Expect(resp.StatusCode).Should(Equal(http.StatusNotFound))
+			f.HTTPTestClient().
+				GET("/").
+				WithHeader("Host", host).
+				Expect().
+				Status(http.StatusNotFound)
 		})
 	})
-
 })

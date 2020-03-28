@@ -67,7 +67,7 @@ echo ${docker_password} | docker login -u ${docker_username} --password-stdin qu
 curl -sL -o /usr/local/bin/gimme https://raw.githubusercontent.com/travis-ci/gimme/master/gimme
 chmod +x /usr/local/bin/gimme
 
-eval "$(gimme 1.13.1)"
+eval "$(gimme 1.14.1)"
 
 export GOPATH="/tmp/go"
 
@@ -80,13 +80,18 @@ git clone https://github.com/kubernetes/ingress-nginx
 
 cd ingress-nginx
 
-make register-qemu
+export DOCKER_CLI_EXPERIMENTAL=enabled
+
+make init-docker-buildx
+docker buildx use ingress-nginx --default --global
+
+# disable docker in docker tasks
+export DIND_TASKS=0
 
 echo "Building NGINX image..."
-make all-container
-
-echo "Publishing NGINX images..."
-make all-push
+ARCH=amd64 make build container push
+ARCH=arm   make build container push
+ARCH=arm64 make build container push
 
 # Requires https://github.com/kubernetes/ingress-nginx/pull/4271
 #echo "Creating multi-arch images..."

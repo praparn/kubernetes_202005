@@ -17,6 +17,7 @@ limitations under the License.
 package store
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
@@ -54,6 +55,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 	"k8s.io/ingress-nginx/internal/k8s"
+	"k8s.io/ingress-nginx/internal/nginx"
 )
 
 // IngressFilterFunc decides if an Ingress should be omitted or not
@@ -289,11 +291,11 @@ func New(
 		&cache.ListWatch{
 			ListFunc: func(options metav1.ListOptions) (k8sruntime.Object, error) {
 				options.LabelSelector = labelSelector.String()
-				return client.CoreV1().Pods(store.pod.Namespace).List(options)
+				return client.CoreV1().Pods(store.pod.Namespace).List(context.TODO(), options)
 			},
 			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
 				options.LabelSelector = labelSelector.String()
-				return client.CoreV1().Pods(store.pod.Namespace).Watch(options)
+				return client.CoreV1().Pods(store.pod.Namespace).Watch(context.TODO(), options)
 			},
 		},
 		&corev1.Pod{},
@@ -530,66 +532,58 @@ func New(
 		return name == configmap || name == tcp || name == udp
 	}
 
-	cmEventHandler := cache.ResourceEventHandlerFuncs{
-		AddFunc: func(obj interface{}) {
-			cm := obj.(*corev1.ConfigMap)
-			key := k8s.MetaNamespaceKey(cm)
-			// updates to configuration configmaps can trigger an update
-			if changeTriggerUpdate(key) {
-				recorder.Eventf(cm, corev1.EventTypeNormal, "CREATE", fmt.Sprintf("ConfigMap %v", key))
+	handleCfgMapEvent := func(key string, cfgMap *corev1.ConfigMap, eventName string) {
+		// updates to configuration configmaps can trigger an update
+		triggerUpdate := false
+		if changeTriggerUpdate(key) {
+			triggerUpdate = true
+			recorder.Eventf(cfgMap, corev1.EventTypeNormal, eventName, fmt.Sprintf("ConfigMap %v", key))
+			if key == configmap {
+				store.setConfig(cfgMap)
+			}
+		}
 
-				if key == configmap {
-					store.setConfig(cm)
-				}
+		ings := store.listers.IngressWithAnnotation.List()
+		for _, ingKey := range ings {
+			key := k8s.MetaNamespaceKey(ingKey)
+			ing, err := store.getIngress(key)
+			if err != nil {
+				klog.Errorf("could not find Ingress %v in local store: %v", key, err)
+				continue
 			}
 
+			if parser.AnnotationsReferencesConfigmap(ing) {
+				store.syncIngress(ing)
+				continue
+			}
+
+			if triggerUpdate {
+				store.syncIngress(ing)
+			}
+		}
+
+		if triggerUpdate {
 			updateCh.In() <- Event{
 				Type: ConfigurationEvent,
-				Obj:  obj,
+				Obj:  cfgMap,
 			}
+		}
+	}
+
+	cmEventHandler := cache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			cfgMap := obj.(*corev1.ConfigMap)
+			key := k8s.MetaNamespaceKey(cfgMap)
+			handleCfgMapEvent(key, cfgMap, "CREATE")
 		},
 		UpdateFunc: func(old, cur interface{}) {
 			if reflect.DeepEqual(old, cur) {
 				return
 			}
 
-			// used to limit the number of events
-			triggerUpdate := false
-
-			cm := cur.(*corev1.ConfigMap)
-			key := k8s.MetaNamespaceKey(cm)
-			// updates to configuration configmaps can trigger an update
-			if changeTriggerUpdate(key) {
-				recorder.Eventf(cm, corev1.EventTypeNormal, "UPDATE", fmt.Sprintf("ConfigMap %v", key))
-				triggerUpdate = true
-			}
-
-			if key == configmap {
-				store.setConfig(cm)
-			}
-
-			ings := store.listers.IngressWithAnnotation.List()
-			for _, ingKey := range ings {
-				key := k8s.MetaNamespaceKey(ingKey)
-				ing, err := store.getIngress(key)
-				if err != nil {
-					klog.Errorf("could not find Ingress %v in local store: %v", key, err)
-					continue
-				}
-
-				if parser.AnnotationsReferencesConfigmap(ing) {
-					recorder.Eventf(cm, corev1.EventTypeNormal, "UPDATE", fmt.Sprintf("ConfigMap %v", key))
-					store.syncIngress(ing)
-					triggerUpdate = true
-				}
-			}
-
-			if triggerUpdate {
-				updateCh.In() <- Event{
-					Type: ConfigurationEvent,
-					Obj:  cur,
-				}
-			}
+			cfgMap := cur.(*corev1.ConfigMap)
+			key := k8s.MetaNamespaceKey(cfgMap)
+			handleCfgMapEvent(key, cfgMap, "UPDATE")
 		},
 	}
 
@@ -630,7 +624,7 @@ func New(
 
 	// do not wait for informers to read the configmap configuration
 	ns, name, _ := k8s.ParseNameNS(configmap)
-	cm, err := client.CoreV1().ConfigMaps(ns).Get(name, metav1.GetOptions{})
+	cm, err := client.CoreV1().ConfigMaps(ns).Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
 		klog.Warningf("Unexpected error reading configuration configmap: %v", err)
 	}
@@ -843,6 +837,7 @@ func (s *k8sStore) GetAuthCertificate(name string) (*resolver.AuthSSLCert, error
 		CASHA:       cert.CASHA,
 		CRLFileName: cert.CRLFileName,
 		CRLSHA:      cert.CRLSHA,
+		PemFileName: cert.PemFileName,
 	}, nil
 }
 
@@ -890,7 +885,16 @@ func (s *k8sStore) setConfig(cmap *corev1.ConfigMap) {
 	s.backendConfigMu.Lock()
 	defer s.backendConfigMu.Unlock()
 
+	if cmap == nil {
+		return
+	}
+
 	s.backendConfig = ngx_template.ReadConfig(cmap.Data)
+	if s.backendConfig.UseGeoIP2 && !nginx.GeoLite2DBExists() {
+		klog.Warning("The GeoIP2 feature is enabled but the databases are missing. Disabling.")
+		s.backendConfig.UseGeoIP2 = false
+	}
+
 	s.writeSSLSessionTicketKey(cmap, "/etc/nginx/tickets.key")
 }
 

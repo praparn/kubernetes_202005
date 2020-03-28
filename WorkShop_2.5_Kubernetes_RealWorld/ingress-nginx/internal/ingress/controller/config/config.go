@@ -56,7 +56,7 @@ const (
 
 	logFormatUpstream = `$remote_addr - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" $request_length $request_time [$proxy_upstream_name] [$proxy_alternative_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status $req_id`
 
-	logFormatStream = `[$time_local] $protocol $status $bytes_sent $bytes_received $session_time`
+	logFormatStream = `[$remote_addr] [$time_local] $protocol $status $bytes_sent $bytes_received $session_time`
 
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_buffer_size
 	// Sets the size of the buffer used for sending data.
@@ -66,7 +66,7 @@ const (
 
 	// Enabled ciphers list to enabled. The ciphers are specified in the format understood by the OpenSSL library
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_ciphers
-	sslCiphers = "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256"
+	sslCiphers = "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384"
 
 	// SSL enabled protocols to use
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_protocols
@@ -195,6 +195,10 @@ type Configuration struct {
 	// through one HTTP/2 connection, after which the next client request will lead to connection closing
 	// and the need of establishing a new connection.
 	HTTP2MaxRequests int `json:"http2-max-requests,omitempty"`
+
+	// http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_concurrent_streams
+	// Sets the maximum number of concurrent HTTP/2 streams in a connection.
+	HTTP2MaxConcurrentStreams int `json:"http2-max-concurrent-streams,omitempty"`
 
 	// Enables or disables the header HSTS in servers running SSL
 	HSTS bool `json:"hsts,omitempty"`
@@ -389,6 +393,10 @@ type Configuration struct {
 	// gzip Compression Level that will be used
 	GzipLevel int `json:"gzip-level,omitempty"`
 
+	// Minimum length of responses to be sent to the client before it is eligible
+	// for gzip compression, in bytes.
+	GzipMinLength int `json:"gzip-min-length,omitempty"`
+
 	// MIME types in addition to "text/html" to compress. The special value “*” matches any MIME type.
 	// Responses with the “text/html” type are always compressed if UseGzip is enabled
 	GzipTypes string `json:"gzip-types,omitempty"`
@@ -548,6 +556,17 @@ type Configuration struct {
 	// Default: nginx.handle
 	DatadogOperationNameOverride string `json:"datadog-operation-name-override"`
 
+	// DatadogPrioritySampling specifies to use client-side sampling
+	// If true disables client-side sampling (thus ignoring sample_rate) and enables distributed
+	// priority sampling, where traces are sampled based on a combination of user-assigned
+	// Default: true
+	DatadogPrioritySampling bool `json:"datadog-priority-sampling"`
+
+	// DatadogSampleRate specifies sample rate for any traces created.
+	// This is effective only when datadog-priority-sampling is false
+	// Default: 1.0
+	DatadogSampleRate float32 `json:"datadog-sample-rate"`
+
 	// MainSnippet adds custom configuration to the main section of the nginx configuration
 	MainSnippet string `json:"main-snippet"`
 
@@ -606,10 +625,6 @@ type Configuration struct {
 	// +optional
 	GlobalExternalAuth GlobalExternalAuth `json:"global-external-auth"`
 
-	// DisableLuaRestyWAF disables lua-resty-waf globally regardless
-	// of whether there's an ingress that has enabled the WAF using annotation
-	DisableLuaRestyWAF bool `json:"disable-lua-resty-waf"`
-
 	// EnableInfluxDB enables the nginx InfluxDB extension
 	// http://github.com/influxdata/nginx-influxdb-module/
 	// By default this is disabled
@@ -633,6 +648,11 @@ type Configuration struct {
 	// DefaultSSLCertificate holds the default SSL certificate to use in the configuration
 	// It can be the fake certificate or the one behind the flag --default-ssl-certificate
 	DefaultSSLCertificate *ingress.SSLCert `json:"-"`
+
+	// ProxySSLLocationOnly controls whether the proxy-ssl parameters defined in the
+	// proxy-ssl-* annotations are applied on on location level only in the nginx.conf file
+	// Default is that those are applied on server level, too
+	ProxySSLLocationOnly bool `json:"proxy-ssl-location-only"`
 }
 
 // NewDefault returns the default nginx configuration
@@ -676,6 +696,7 @@ func NewDefault() Configuration {
 		HTTP2MaxFieldSize:                "4k",
 		HTTP2MaxHeaderSize:               "16k",
 		HTTP2MaxRequests:                 1000,
+		HTTP2MaxConcurrentStreams:        128,
 		HTTPRedirectCode:                 308,
 		HSTS:                             true,
 		HSTSIncludeSubdomains:            true,
@@ -683,6 +704,7 @@ func NewDefault() Configuration {
 		HSTSPreload:                      false,
 		IgnoreInvalidHeaders:             true,
 		GzipLevel:                        5,
+		GzipMinLength:                    256,
 		GzipTypes:                        gzipTypes,
 		KeepAlive:                        75,
 		KeepAliveRequests:                100,
@@ -719,7 +741,7 @@ func NewDefault() Configuration {
 		UseGeoIP2:                        false,
 		WorkerProcesses:                  strconv.Itoa(runtime.NumCPU()),
 		WorkerShutdownTimeout:            "240s",
-		VariablesHashBucketSize:          128,
+		VariablesHashBucketSize:          256,
 		VariablesHashMaxSize:             2048,
 		UseHTTP2:                         true,
 		ProxyStreamTimeout:               "600s",
@@ -766,12 +788,15 @@ func NewDefault() Configuration {
 		DatadogServiceName:           "nginx",
 		DatadogCollectorPort:         8126,
 		DatadogOperationNameOverride: "nginx.handle",
+		DatadogSampleRate:            1.0,
+		DatadogPrioritySampling:      true,
 		LimitReqStatusCode:           503,
 		LimitConnStatusCode:          503,
 		SyslogPort:                   514,
 		NoTLSRedirectLocations:       "/.well-known/acme-challenge",
 		NoAuthLocations:              "/.well-known/acme-challenge",
 		GlobalExternalAuth:           defGlobalExternalAuth,
+		ProxySSLLocationOnly:         false,
 	}
 
 	if klog.V(5) {
@@ -801,6 +826,7 @@ type TemplateConfig struct {
 	ListenPorts              *ListenPorts
 	PublishService           *apiv1.Service
 	EnableMetrics            bool
+	MaxmindEditionFiles      []string
 
 	PID        string
 	StatusPath string

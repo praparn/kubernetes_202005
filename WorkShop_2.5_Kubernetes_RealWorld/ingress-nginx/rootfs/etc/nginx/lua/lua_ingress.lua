@@ -105,7 +105,6 @@ end
 -- phases or redirection
 function _M.rewrite(location_config)
   ngx.var.pass_access_scheme = ngx.var.scheme
-  ngx.var.pass_server_port = ngx.var.server_port
   ngx.var.best_http_host = ngx.var.http_host or ngx.var.host
 
   if config.use_forwarded_headers then
@@ -121,6 +120,12 @@ function _M.rewrite(location_config)
     -- Obtain best http host
     if ngx.var.http_x_forwarded_host then
       ngx.var.best_http_host = parse_x_forwarded_host()
+    end
+  end
+
+  if config.use_proxy_protocol then
+    if ngx.var.proxy_protocol_server_port == "443" then
+      ngx.var.pass_access_scheme = "https"
     end
   end
 
@@ -142,7 +147,9 @@ function _M.rewrite(location_config)
 
     ngx_redirect(uri, config.http_redirect_code)
   end
+end
 
+function _M.header()
   if config.hsts and ngx.var.scheme == "https" and certificate_configured_for_current_request then
     local value = "max-age=" .. config.hsts_max_age
     if config.hsts_include_subdomains then

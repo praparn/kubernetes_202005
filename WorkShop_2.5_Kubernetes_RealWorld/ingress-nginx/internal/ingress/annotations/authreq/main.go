@@ -18,7 +18,6 @@ package authreq
 
 import (
 	"fmt"
-	"net/url"
 	"regexp"
 	"strings"
 
@@ -44,7 +43,7 @@ type Config struct {
 	AuthSnippet       string            `json:"authSnippet"`
 	AuthCacheKey      string            `json:"authCacheKey"`
 	AuthCacheDuration []string          `json:"authCacheDuration"`
-	ProxySetHeaders   map[string]string `json:"proxySetHeaders",omitempty`
+	ProxySetHeaders   map[string]string `json:"proxySetHeaders,omitempty"`
 }
 
 // DefaultCacheDuration is the fallback value if no cache duration is provided
@@ -159,9 +158,9 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 		return nil, err
 	}
 
-	authURL, message := ParseStringToURL(urlString)
-	if authURL == nil {
-		return nil, ing_errors.NewLocationDenied(message)
+	authURL, err := parser.StringToURL(urlString)
+	if err != nil {
+		return nil, ing_errors.InvalidContent{Name: err.Error()}
 	}
 
 	authMethod, _ := parser.GetStringAnnotation("auth-method", ing)
@@ -219,8 +218,8 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 			return nil, ing_errors.NewLocationDenied(fmt.Sprintf("unable to find configMap %q", proxySetHeaderMap))
 		}
 
-		for header, value := range proxySetHeadersMapContents.Data {
-			if !ValidHeader(header) || !ValidHeader(value) {
+		for header := range proxySetHeadersMapContents.Data {
+			if !ValidHeader(header) {
 				return nil, ing_errors.NewLocationDenied("invalid proxy-set-headers in configmap")
 			}
 		}
@@ -242,25 +241,6 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 		AuthCacheDuration: authCacheDuration,
 		ProxySetHeaders:   proxySetHeaders,
 	}, nil
-}
-
-// ParseStringToURL parses the provided string into URL and returns error
-// message in case of failure
-func ParseStringToURL(input string) (*url.URL, string) {
-
-	parsedURL, err := url.Parse(input)
-	if err != nil {
-		return nil, fmt.Sprintf("%v is not a valid URL: %v", input, err)
-	}
-	if parsedURL.Scheme == "" {
-		return nil, "url scheme is empty."
-	} else if parsedURL.Host == "" {
-		return nil, "url host is empty."
-	} else if strings.Contains(parsedURL.Host, "..") {
-		return nil, "invalid url host."
-	}
-	return parsedURL, ""
-
 }
 
 // ParseStringToCacheDurations parses and validates the provided string

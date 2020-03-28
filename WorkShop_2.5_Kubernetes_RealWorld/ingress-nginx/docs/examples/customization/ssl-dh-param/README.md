@@ -27,7 +27,7 @@ $ kubectl create -f configmap.yaml
 ## Custom DH parameters secret
 
 ```console
-$> openssl dhparam 1024 2> /dev/null | base64
+$> openssl dhparam 4096 2> /dev/null | base64
 LS0tLS1CRUdJTiBESCBQQVJBTUVURVJ...
 ```
 
@@ -36,9 +36,9 @@ $ cat ssl-dh-param.yaml
 apiVersion: v1
 data:
   dhparam.pem: "LS0tLS1CRUdJTiBESCBQQVJBTUVURVJ..."
-kind: ConfigMap
+kind: Secret
 metadata:
-  name: nginx-configuration
+  name: lb-dhparam
   namespace: ingress-nginx
   labels:
     app.kubernetes.io/name: ingress-nginx
