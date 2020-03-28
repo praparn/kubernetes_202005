@@ -7,6 +7,7 @@ Part0: Create Dashboard
 	kubectl create namespace kubernetes-dashboard
 	kubectl create secret generic kubernetes-dashboard-certs --from-file=$HOME/kubernetes_202005/WorkShop_1.7_Resource_Management/cert -n kubernetes-dashboard
 	kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_1.7_Resource_Management/dashboard-restrict.yml
+	watch kubectl get all -n=kubernetes-dashboard
 	
 2. Check Bearer Token for access by command:
 	kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_1.7_Resource_Management/user-restrict.yml
@@ -37,7 +38,7 @@ Part1: Container level configuration:
 	kubectl get pods --show-labels
 
 4. Open another shell for access minikube vm by command:
-	Open browser: http://<Public IP>:31000
+	Open browser: http://<Public IP>:31000 or curl http://<Private IP>:31000
 	export TERM=xterm
 	sudo apt-get install -y htop
 	htop

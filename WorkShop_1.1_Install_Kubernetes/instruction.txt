@@ -31,22 +31,27 @@ Link for download:
     API Server: ps -ef | grep kube-apiserver | grep feature-gate
     Scheduler: ps -ef | grep kube-scheduler | grep feature-gate
 
-7. Test deploy application by command:
+9. Check Existing Certificate and CSR:
+    sudo find /etc/kubernetes/pki/ -type f -name "*.crt" -print|egrep -v 'ca.crt$'|xargs -L 1 -t  -i bash -c 'openssl x509  -noout -text -in {}|grep After'
+    kubectl get csr
+
+10. Test deploy application by command:
     kubectl run webtest --image=labdocker/nginx:http2 --port=443
     kubectl get pods -o wide
     kubectl expose pods webtest --target-port=443 --type=NodePort
     kubectl get svc -o wide                                               ==> Record Public Port
+    curl ifconfig.co
 
-8. Test access web endpoint by command:
+11. Test access web endpoint by command:
     https://<Public IP>:<Port>
     or
-    curl https://<Public IP>:<Port>
+    curl https://<Public IP>:<Port> -v -k
 
-9. Clear up lab by command:
+12. Clear up lab by command:
     kubectl delete pods/webtest
     kubectl delete svc/webtest
 
-11. Now all workshop is on "/home/ubuntu/kubernetes_202005"
+13. Now all workshop is on "/home/ubuntu/kubernetes_202005"
 
 
 *Remark: In case you need to reinitial all this lab again please kindly following command below (*Warnning: This will reset all lab that you had been operate before)
