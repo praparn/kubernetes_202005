@@ -10,6 +10,8 @@ kind: InitConfiguration
 localAPIEndpoint:
   bindPort: 6443
 nodeRegistration:
+  kubeletExtraArgs:
+    "feature-gates": "EphemeralContainers=true"
   criSocket: /var/run/dockershim.sock
   taints:
   - effect: NoSchedule

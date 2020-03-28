@@ -16,6 +16,7 @@ Part1: Container Logging:
 
 4. Update ephemeralcontainers pods's name by command:
 	sed -i -e 's/podsname/<pods name>/g' ~/kubernetes_202005/WorkShop_2.2_Log_and_Monitoring/databasemodule_ephemeralcontainers.json
+	more ~/kubernetes_202005/WorkShop_2.2_Log_and_Monitoring/databasemodule_ephemeralcontainers.json
 
 5. Update ephemeral container for maindb's pods by command:
     kubectl replace --raw /api/v1/namespaces/default/pods/<pods name>/ephemeralcontainers  -f ~/kubernetes_202005/WorkShop_2.2_Log_and_Monitoring/databasemodule_ephemeralcontainers.json
@@ -30,8 +31,11 @@ Part1: Container Logging:
 8. Checl Log of Ephemeralcontainers by command:
 	kubectl logs pods/debugger
 
-9. Test delete pods of "maindb" and check log from Ephemeralcontainer by command
+9. Test delete pods of "maindb" by command
 	kubectl delete pods/<pods name>
+
+10. Wait until new pods was created and check log on Ephemeralcontainers by command:
+	kubectl 
 
 6. Create WebModule Deployment by command:
 	kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.2_Log_and_Monitoring/webmodule_deploy.yml
