@@ -1,0 +1,25 @@
+{
+    "apiVersion": "v1",
+    "kind": "EphemeralContainers",
+    "metadata": {
+      "name": "podsname",
+      "labels": {
+        "name": "web",
+        "owner": "Praparn_L",
+        "version": "1.0",
+        "module": "web",
+        "environment": "development"
+    }
+  },
+    "ephemeralContainers": [{
+        "command": [
+            "sh"
+        ],
+        "image": "busybox",
+        "imagePullPolicy": "IfNotPresent",
+        "name": "debuggerweb",
+        "stdin": true,
+        "tty": true,
+        "terminationMessagePolicy": "File"
+    }]
+}
