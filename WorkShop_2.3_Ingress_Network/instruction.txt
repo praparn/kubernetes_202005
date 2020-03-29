@@ -32,7 +32,8 @@ ingress-nginx   NodePort   10.96.228.199   <none>        80:32037/TCP,443:32119/
 ========================================
 
 	0.3 Test open browser: (404 Not Found was expected):
-		http://<public ip>:<Port of http(80)>
+		curl ifconfig.co
+		curl http://<public ip>:<Port of http(80)>
 
 1. Create Service/Pods/Deployment for webtest1 and webtest2 by command:
 	kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.3_Ingress_Network/webtest_deploy.yml
@@ -107,4 +108,4 @@ _L,version=1.0
 	kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.3_Ingress_Network/ingress_webtest_tls_secret_webtest2.yml
 	kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.3_Ingress_Network/webtest_deploy.yml
 	kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.3_Ingress_Network/webtest_deploy2.yml
-	kubectl delete deployment/curl
+	kubectl delete pods/curl

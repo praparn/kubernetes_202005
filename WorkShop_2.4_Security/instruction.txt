@@ -134,3 +134,7 @@ kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_201911/ma
 kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_201911/master/WorkShop_2.4_Security/security-pod.yml
 kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_201911/master/WorkShop_2.4_Security/security-svc.yml
 kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_201911/master/WorkShop_2.4_Security/security-namespace.yml
+
+============================================================================================================================================================
+Part 4: Pods Security Policy
+============================================================================================================================================================
