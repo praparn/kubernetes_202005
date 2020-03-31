@@ -4,10 +4,10 @@ Note: This instruction will start lab for kubernetes's cluster for real workshop
 Part 1: Network Policy
 ============================================================================================================================================================
 1. Create Application Set by command:
-	kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_201911/master/WorkShop_2.4_Security/management-ui-set.yml
-	kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_201911/master/WorkShop_2.4_Security/backend-set.yml
-	kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_201911/master/WorkShop_2.4_Security/frontend-set.yml
-	kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_201911/master/WorkShop_2.4_Security/client-set.yml
+	kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/management-ui-set.yml
+	kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/backend-set.yml
+	kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/frontend-set.yml
+	kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/client-set.yml
 
 2. Check Namespace / Service / Pods 
 	kubectl get namespace
@@ -19,44 +19,44 @@ Part 1: Network Policy
 	http://<Public IP>:32500
 
 4. Apply network policy for denied any connection to namespace: "stars" and "client"
-	kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_201911/master/WorkShop_2.4_Security/policy-deny-client.yml
-	kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_201911/master/WorkShop_2.4_Security/policy-deny-stars.yml
+	kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/policy-deny-client.yml
+	kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/policy-deny-stars.yml
 
 5. Test open browser again:
 	http://<Publi IP>:32500
 
 6. Apply network policy for allow all pods from namespace "management-ui" (label: role=management-ui) access to any pods in namespace "stars"
-	kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_201911/master/WorkShop_2.4_Security/policy-allow-ui.yml
+	kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/policy-allow-ui.yml
 
 7. Apply network policy for allow all pods from namespace "management-ui" (label: role=management-ui) access to any pods in namespace "client"
-	kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_201911/master/WorkShop_2.4_Security/policy-allow-ui-client.yml
+	kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/policy-allow-ui-client.yml
 
 8. Test open browser again:
 	http://<Publi IP>:32500
 
 9. Apply network policy for allow pods frontend (label: role=frontend) to pods backend (label: role=backend) in same namespace
-	kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_201911/master/WorkShop_2.4_Security/policy-allow-backend.yml
+	kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/policy-allow-backend.yml
 
 10. Apply network policy for allow all pods from namespace "client" (label: role=client) access to pods frontend (label: role=frontend)
-	kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_201911/master/WorkShop_2.4_Security/policy-allow-frontend.yml
+	kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/policy-allow-frontend.yml
 
 11. Test open browser again:
 	http://<Publi IP>:32500
 
 12. CleanUp Lab by command:
-	kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_201911/master/WorkShop_2.4_Security/management-ui-set.yml
-	kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_201911/master/WorkShop_2.4_Security/backend-set.yml
-	kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_201911/master/WorkShop_2.4_Security/frontend-set.yml
-	kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_201911/master/WorkShop_2.4_Security/client-set.yml
+	kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/management-ui-set.yml
+	kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/backend-set.yml
+	kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/frontend-set.yml
+	kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/client-set.yml
 
 ============================================================================================================================================================
 Part 2: Access Control Policy (User Account)
 ============================================================================================================================================================
 
 1. Create namespace "security" and deploy application via command:
-	kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_201911/master/WorkShop_2.4_Security/security-namespace.yml
-	kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_201911/master/WorkShop_2.4_Security/security-pod.yml
-	kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_201911/master/WorkShop_2.4_Security/security-svc.yml
+	kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/security-namespace.yml
+	kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/security-pod.yml
+	kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/security-svc.yml
 	kubectl get pod,svc -n=security
 	curl http://<Private IP>:32500
 
@@ -84,11 +84,11 @@ kubectl config set-context labreadonly-context --cluster=kubernetes --namespace=
 kubectl --context=labreadonly-context get pods
 
 7. Create Role "ReadOnly" by command:
-kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_201911/master/WorkShop_2.4_Security/security-role-readonly.yml
+kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/security-role-readonly.yml
 kubectl get roles -n=security
 
 8. Create RoleBinding for user "labreadonly" with role "rolereadonly"
-kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_201911/master/WorkShop_2.4_Security/security-rolebinding-labsecurity.yml
+kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/security-rolebinding-labsecurity.yml
 kubectl get rolebinding -n=security
 
 9. Try to get pods again.
@@ -100,14 +100,14 @@ kubectl --context=labreadonly-context delete pods/webtest
 kubectl --context=labreadonly-context run webtest --image=labdocker/nginx:http2 --port=443 -n=security
 
 11. CleanUp Lab:
-kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_201911/master/WorkShop_2.4_Security/security-rolebinding-labsecurity.yml
+kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/security-rolebinding-labsecurity.yml
 kubectl config delete-context labreadonly-context
 
 ============================================================================================================================================================
 Part 3: Access Control Policy (System Account)
 ============================================================================================================================================================
 1. Create Service Account by command:
-kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_201911/master/WorkShop_2.4_Security/security-serviceaccount-readonly.yml
+kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/security-serviceaccount-readonly.yml
 kubectl get sa -n=security
 
 2. Create RoleBinding by command:
@@ -129,12 +129,43 @@ kubectl run webtest --image=labdocker/nginx:http2 --port=443 -n security --as sy
 
 5. Clearup Lab by command:
 kubectl delete rolebinding/rolebindingserviceaccountreadonly -n=security
-kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_201911/master/WorkShop_2.4_Security/security-serviceaccount-readonly.yml
-kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_201911/master/WorkShop_2.4_Security/security-role-readonly.yml
-kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_201911/master/WorkShop_2.4_Security/security-pod.yml
-kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_201911/master/WorkShop_2.4_Security/security-svc.yml
-kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_201911/master/WorkShop_2.4_Security/security-namespace.yml
+kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/security-serviceaccount-readonly.yml
+kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/security-role-readonly.yml
+kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/security-pod.yml
+kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/security-svc.yml
+kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/security-namespace.yml
 
 ============================================================================================================================================================
 Part 4: Pods Security Policy
 ============================================================================================================================================================
+1. Create namespace and apply pods security policy by command:
+kubectl apply -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/psp-namespace.yml
+kubectl apply -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/psp-policy.yml
+
+2. Create service account and basic edit role on namespace "namespace-psp" by command:
+kubectl apply -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/psp-serviceaccount.yml
+kubectl create rolebinding -n namespace-psp clusterbinding-std --clusterrole=edit --serviceaccount=namespace-psp:serviceaccount-psp
+
+3. Create alias for Admin and Authorized User
+alias kubectl-admin='kubectl -n namespace-psp'
+alias kubectl-user='kubectl --as=system:serviceaccount:namespace-psp:serviceaccount-psp -n namespace-psp'
+
+4. Test create pods by command:
+kubectl-admin apply -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/psp-normal-pods.yml
+kubectl-user apply -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/psp-normal-pods.yml
+
+5. Check authorize for pods security policyby command:
+kubectl-admin auth can-i use podsecuritypolicy/psp-restricted
+kubectl-user auth can-i use podsecuritypolicy/psp-restricted
+
+6. Create role and binding role to user "serviceaccount-psp" for use pods security policy by command:
+kubectl apply -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/psp-clusterrole.yml
+kubectl apply -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/psp-clusterrolebinding.yml
+
+7. Check authorize for pods security policyby command:
+kubectl-admin auth can-i use podsecuritypolicy/psp-restricted
+kubectl-user auth can-i use podsecuritypolicy/psp-restricted
+
+8. Test create pods again by command:
+kubectl-admin apply -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/psp-normal-pods.yml
+kubectl-user apply -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/psp-normal-pods.yml
