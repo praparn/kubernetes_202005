@@ -73,7 +73,7 @@ tmux new -s Lab
 	kubectl taint nodes --all node-role.kubernetes.io/master-
 
 7. (Master) Create calico net plugin for network for cluster by command:
-    kubectl apply -f https://docs.projectcalico.org/v3.8/manifests/calico.yaml
+    kubectl apply -f https://docs.projectcalico.org/v3.11/manifests/calico.yaml
 
 8. (Master) Check master readiness and dns by command (Take 5 - 10 min):
 	watch kubectl get pods --all-namespaces
@@ -142,13 +142,13 @@ watch kubectl get pods --all-namespaces
 18. (Master) Test deployment basic nginx pods by command
 kubectl run webtest --image=labdocker/nginx:http2 --port=443
 kubectl get pods -o wide
-kubectl expose deployment webtest --target-port=443 --type=NodePort
+kubectl expose pods webtest --target-port=443 --type=NodePort
 kubectl get svc -o wide                                               ==> Record Public Port
 
-19. (loal) Test get web outside:
-https://x.x.x.x:xxxx
-https://x.x.x.x:xxxx
-https://x.x.x.x:xxxx
+19. (Master) Test get web outside:
+curl https://<public ip master>:xxxx -k
+curl https://<public ip node1>:xxxx -k
+curl https://<public ip node2>:xxxx -k
 
 20. (Master) Cleanup Lab by command:
 kubectl delete deployment/webtest
