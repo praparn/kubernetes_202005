@@ -78,7 +78,7 @@ ls ~/labreadonly*
 cd ~
 cp ~/.kube/config ~/.kube/config_backup
 kubectl config set-credentials labreadonly --client-certificate=/home/ubuntu/labreadonly.crt  --client-key=/home/ubuntu/labreadonly.key
-kubectl config set-context labreadonly-context --cluster=kubernetes --namespace=security --user=labreadonly
+kubectl config set-context labreadonly-context --cluster=KubernetesLab --namespace=security --user=labreadonly
 
 6. Test use credential for operate by command: (Expect: Forbidden)
 kubectl --context=labreadonly-context get pods
@@ -101,6 +101,7 @@ kubectl --context=labreadonly-context run webtest --image=labdocker/nginx:http2 
 
 11. CleanUp Lab:
 kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/security-rolebinding-labsecurity.yml
+kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/security-role-readonly.yml
 kubectl config delete-context labreadonly-context
 
 ============================================================================================================================================================
@@ -150,7 +151,7 @@ kubectl create rolebinding -n namespace-psp clusterbinding-std --clusterrole=edi
 alias kubectl-admin='kubectl -n namespace-psp'
 alias kubectl-user='kubectl --as=system:serviceaccount:namespace-psp:serviceaccount-psp -n namespace-psp'
 
-4. Test create pods by command:
+4. Test create pods by command:(Expect: Forbidden)
 kubectl-admin apply -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/psp-normal-pods.yml
 kubectl-user apply -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/psp-normal-pods.yml
 
