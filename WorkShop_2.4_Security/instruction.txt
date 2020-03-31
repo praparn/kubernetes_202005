@@ -135,38 +135,3 @@ kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_202005/ma
 kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/security-pod.yml
 kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/security-svc.yml
 kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/security-namespace.yml
-
-============================================================================================================================================================
-Part 4: Pods Security Policy
-============================================================================================================================================================
-1. Create namespace and apply pods security policy by command:
-kubectl apply -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/psp-namespace.yml
-kubectl apply -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/psp-policy.yml
-
-2. Create service account and basic edit role on namespace "namespace-psp" by command:
-kubectl apply -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/psp-serviceaccount.yml
-kubectl create rolebinding -n namespace-psp clusterbinding-std --clusterrole=edit --serviceaccount=namespace-psp:serviceaccount-psp
-
-3. Create alias for Admin and Authorized User
-alias kubectl-admin='kubectl -n namespace-psp'
-alias kubectl-user='kubectl --as=system:serviceaccount:namespace-psp:serviceaccount-psp -n namespace-psp'
-
-4. Test create pods by command:(Expect: Forbidden)
-kubectl-admin apply -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/psp-normal-pods.yml
-kubectl-user apply -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/psp-normal-pods.yml
-
-5. Check authorize for pods security policyby command:
-kubectl-admin auth can-i use podsecuritypolicy/psp-restricted
-kubectl-user auth can-i use podsecuritypolicy/psp-restricted
-
-6. Create role and binding role to user "serviceaccount-psp" for use pods security policy by command:
-kubectl apply -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/psp-clusterrole.yml
-kubectl apply -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/psp-clusterrolebinding.yml
-
-7. Check authorize for pods security policyby command:
-kubectl-admin auth can-i use podsecuritypolicy/psp-restricted
-kubectl-user auth can-i use podsecuritypolicy/psp-restricted
-
-8. Test create pods again by command:
-kubectl-admin apply -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/psp-normal-pods.yml
-kubectl-user apply -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/psp-normal-pods.yml
