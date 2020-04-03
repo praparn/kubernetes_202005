@@ -3,7 +3,7 @@ Part0: Install Metric Server
 ====================================================
 1. (Master) Create Metric Server:
 	cd ~/kubernetes_202005/WorkShop_2.8_HPA_WorkShop/metrics-server/
-	kubectl create -f deploy/1.8+/
+	kubectl apply -f deploy/kubernetes/
 	kubectl get pods -n=kube-system
 	kubectl logs pods/<metrics's pods name> -n=kube-system
 
@@ -20,7 +20,7 @@ Part 1: HPA Configuration:
 	kubectl get svc/webtest -o wide
 
 3. Test Access by url:
-	http://x.x.x.x:32500
+	curl http://<Public IP of Any Node>:32500
 
 4. Apply HPA by command:
 	kubectl autoscale deployment/webtest --min=1 --max=10 --cpu-percent=10 
@@ -49,5 +49,5 @@ Part 1: HPA Configuration:
 
 10. Cleanup lab by command:
 	kubectl delete hpa/webtest
-	kubectl delete deployment/load-generator
+	kubectl delete pods/load-generator
 	kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.8_HPA_WorkShop/webtest_deploy_hpa.yml
