@@ -12,7 +12,6 @@ Link for download:
 
 5. Initial kubernetes by command:
     sudo su -
-    kubeadm config images pull
     kubeadm init --config /home/ubuntu/kubernetes_202005/WorkShop_1.1_Install_Kubernetes/kubeadm-init-basic.yaml
     exit
 

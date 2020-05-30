@@ -17,11 +17,6 @@ nodeRegistration:
   - effect: NoSchedule
     key: node-role.kubernetes.io/master
 ---
-kubeProxy:
-  config:
-    featureGates:
-      SupportIPVSProxyMode: true
-    mode: ipvs
 apiServer:
   extraArgs:
     authorization-mode: Node,RBAC
@@ -50,3 +45,7 @@ networking:
 scheduler:
   extraArgs:
     "feature-gates": "RotateKubeletClientCertificate=true, RotateKubeletServerCertificate=true, TTLAfterFinished=true, EphemeralContainers=true, ServiceTopology=true, EndpointSlice=true"
+---
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+kind: KubeProxyConfiguration
+mode: ipvs
