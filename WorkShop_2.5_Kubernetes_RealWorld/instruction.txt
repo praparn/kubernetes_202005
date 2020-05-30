@@ -13,16 +13,18 @@ Note: This instruction will start lab for kubernetes's cluster for real workshop
 	rm -rf kubernetes_202005/
 	git clone https://github.com/praparn/kubernetes_202005.git
 	sudo su -
-    modprobe -- ip_vs
-    modprobe -- ip_vs_rr
-    modprobe -- ip_vs_wrr
-    modprobe -- ip_vs_sh
-    modprobe -- nf_conntrack_ipv4
-    lsmod | grep -e ip_vs -e nf_conntrack_ipv4
-    reboot 
-	
-1. Check "LAB" sheet for your group and inform your team for all node information like below:
+	cp /etc/modules /etc/modules_backup
+	echo "" > /etc/modules
+    echo "ip_vs" >> /etc/modules
+    echo "ip_vs_rr" >> /etc/modules
+    echo "ip_vs_wrr" >> /etc/modules
+    echo "ip_vs_sh" >> /etc/modules
+    echo "nf_conntrack_ipv4" >> /etc/modules
+	reboot
+	*After reboot check modprobe*
+    sudo lsmod | grep -e ip_vs -e nf_conntrack_ipv4
 
+1. Check "LAB" sheet for your group and inform your team for all node information like below:
 ====================================================
 Lab Description: (Check you excel sheet)
 ClusterName: XXXXX
@@ -80,30 +82,24 @@ tmux new -s Lab
 	sudo chown $(id -u):$(id -g) $HOME/.kube/config
 	kubectl taint nodes --all node-role.kubernetes.io/master-
 
-7. (Master) Create calico net plugin for network for cluster by command:
-    kubectl apply -f https://docs.projectcalico.org/v3.11/manifests/calico.yaml
-
-8. (Master) Check master readiness and dns by command (Take 5 - 10 min):
-	watch kubectl get pods --all-namespaces
-
-9. (Master) Check IPVS mode on kube-proxy by command:
+7. (Master) Check IPVS mode on kube-proxy by command:
     kubectl get pods -n kube-system ==> Record kube-proxy name
     kubectl logs kube-proxy-<XXXX> -n kube-system
 
-10 (Master) Edit configuration of "kube-proxy" and add schedule to "lc": least connection
+8 (Master) Edit configuration of "kube-proxy" and add schedule to "lc": least connection
 	kubectl get -n kube-system configmap/kube-proxy -o yaml > ~/kube-proxy-configmap.yml
 	sed -i -e 's/scheduler: ""/scheduler: "lc"/g' ~/kube-proxy-configmap.yml
 	more ~/kube-proxy-configmap.yml
 	kubectl apply -f ~/kube-proxy-configmap.yml
 
-11 (Master) Delete existing pods of kube-proxy for apply new configuration
+9 (Master) Delete existing pods of kube-proxy for apply new configuration
 	kubectl get pods -n kube-system
 	kubectl delete pods/kube-proxy-<xxxx> -n kube-system
 	kubectl get pods -n kube-system
 	kubectl logs kube-proxy-<XXXX> -n kube-system
 
-12 (Master) Check IPVS policy by ipvsadm
-	sudo apt-get update && apt-get install -y ipvsadm
+10 (Master) Check IPVS policy by ipvsadm
+	sudo apt-get update && sudo apt-get install -y ipvsadm
 	sudo ipvsadm
 	-------------------------------------------------
 	Example Result:
@@ -112,17 +108,17 @@ IP Virtual Server version 1.2.1 (size=4096)
 Prot LocalAddress:Port Scheduler Flags
   -> RemoteAddress:Port           Forward Weight ActiveConn InActConn
 TCP  ip-10-96-0-1.ap-southeast-1. lc
-  -> ip-10-0-1-28.ap-southeast-1. Masq    1      5          0         
+  -> ip-10-0-1-64.ap-southeast-1. Masq    1      0          0         
 TCP  ip-10-96-0-10.ap-southeast-1 lc
-  -> ip-192-168-17-65.ap-southeas Masq    1      0          0         
-  -> ip-192-168-17-67.ap-southeas Masq    1      0          0         
 TCP  ip-10-96-0-10.ap-southeast-1 lc
-  -> ip-192-168-17-65.ap-southeas Masq    1      0          0         
-  -> ip-192-168-17-67.ap-southeas Masq    1      0          0         
 UDP  ip-10-96-0-10.ap-southeast-1 lc
-  -> ip-192-168-17-65.ap-southeas Masq    1      0          0         
-  -> ip-192-168-17-67.ap-southeas Masq    1      0          0 
 	-------------------------------------------------
+
+11. (Master) Create calico net plugin for network for cluster by command:
+    kubectl apply -f https://docs.projectcalico.org/v3.11/manifests/calico.yaml
+
+12. (Master) Check master readiness and dns by command (Take 5 - 10 min):
+	watch kubectl get pods --all-namespaces
 
 ========================================  Create Dashboard =====================================================================
 13. (Master) Create Dashboard by command:
@@ -130,9 +126,9 @@ UDP  ip-10-96-0-10.ap-southeast-1 lc
 	kubectl create secret generic kubernetes-dashboard-certs --from-file=$HOME/kubernetes_202005/WorkShop_1.7_Resource_Management/cert -n kubernetes-dashboard
 	kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_1.7_Resource_Management/dashboard-restrict.yml
 	
-11. (Master) Check Bearer Token for access by command:
+14. (Master) Check Bearer Token for access by command:
 	kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_1.7_Resource_Management/user-restrict.yml
-	kubectl get secret -n kubernetes-dashboard 
+	kubectl get secret -n kubernetes-dashboard
 	kubectl describe secret <admin-user-token-xxx> -n kubernetes-dashboard
 	*Remark: Record Token:
 	Ex:
@@ -140,7 +136,7 @@ UDP  ip-10-96-0-10.ap-southeast-1 lc
  eyJhbGciOiJSUzI1NiIsImtpZCI6ImZ6RnRXNmI3STdLR3VRS2lLSjU0LV9wU2hySzVKS1JDdXczQ2NkTmU4eVkifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlcm5ldGVzLWRhc2hib2FyZCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJhZG1pbi11c2VyLXRva2VuLTQ0Zm1nIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6ImFkbWluLXVzZXIiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiI3NmNjNWRiMC0yMWRlLTQyZTItOWMxNi1lYjExZDhkMTAyNmMiLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6a3ViZXJuZXRlcy1kYXNoYm9hcmQ6YWRtaW4tdXNlciJ9.Eoj6wFbMpeBbBYmnWx9IbeuHHDswsboWmtsmymFmRhAy0a8ivYs-yFYpOo1rIHte4EuKwGllIHbOIdyosWnpPXF_7q_yxhjTk1tfOPAzbyIFIzggasXJwIpTQReH7pu7cHE6dd4olJYtiklfI_UotM4VvvAGpL8xaWPRx8Am9laL11LJFccmiWaw9YjQlU1-1iMzSwVKWHkX990MGGNNr0hXSQSYPHYyjaiyU1RoSRjJyhwxXhV-nneB3qDqUjJiIVEtoAoIR0taQdrXYqxLiwdZGyfhsFJWNxlYhMGcLiLE-IH8TA_7kvTQg7pqJtkcfRiLUxmAajlrHNaiCEtPFQ
  	------------------------------------------------------------------------------------
 
-12. (Master) Open Kubernetes's forward for operate:
+14. (Master) Open Kubernetes's forward for operate:
 	kubectl get pods -n=kubernetes-dashboard
 	kubectl port-forward --address 0.0.0.0 pods/<kubernetes-dashboard-xxx> 8443:8443 -n=kubernetes-dashboard
 	(Ex: kubectl port-forward --address 0.0.0.0 pods/kubernetes-dashboard-7b5bf5d559-stwjc 8443:8443 -n=kubernetes-dashboard)
@@ -149,7 +145,7 @@ UDP  ip-10-96-0-10.ap-southeast-1 lc
 	https://<Public IP>:8443
 ========================================  Create Dashboard =====================================================================
 
-13. (Worker1) Prepare configuration for initial kubernetes worker:
+15. (Worker1) Prepare configuration for initial kubernetes worker:
 cd ~
 sed -i -e 's/token: tokenid/token: <token id>/g' ~/kubernetes_202005/WorkShop_2.5_Kubernetes_RealWorld/kubeadm-join.yaml
 sed -i -e 's/sha256:cahash/<ca-cert-hash>/g' ~/kubernetes_202005/WorkShop_2.5_Kubernetes_RealWorld/kubeadm-join.yaml
@@ -157,14 +153,14 @@ sed -i -e 's/apiServerEndpoint: hostnamemaster:6443/apiServerEndpoint: <full nam
 sed -i -e 's/name: hostnameworker/name: <full name of worker1 node>/g' ~/kubernetes_202005/WorkShop_2.5_Kubernetes_RealWorld/kubeadm-join.yaml
 more ~/kubernetes_202005/WorkShop_2.5_Kubernetes_RealWorld/kubeadm-join.yaml
 
-14. (Worker1) join cluster by command:
+16. (Worker1) join cluster by command:
 sudo su -
 swapoff -a
 kubeadm join --config /home/ubuntu/kubernetes_202005/WorkShop_2.5_Kubernetes_RealWorld/kubeadm-join.yaml
 exit
 htop
 
-14. (Worker2) Prepare configuration for initial kubernetes worker:
+17. (Worker2) Prepare configuration for initial kubernetes worker:
 cd ~
 sed -i -e 's/token: tokenid/token: <token id>/g' ~/kubernetes_202005/WorkShop_2.5_Kubernetes_RealWorld/kubeadm-join.yaml
 sed -i -e 's/sha256:cahash/<ca-cert-hash>/g' ~/kubernetes_202005/WorkShop_2.5_Kubernetes_RealWorld/kubeadm-join.yaml
@@ -172,38 +168,94 @@ sed -i -e 's/apiServerEndpoint: hostnamemaster:6443/apiServerEndpoint: <full nam
 sed -i -e 's/name: hostnameworker/name: <full name of worker2 node>/g' ~/kubernetes_202005/WorkShop_2.5_Kubernetes_RealWorld/kubeadm-join.yaml
 more ~/kubernetes_202005/WorkShop_2.5_Kubernetes_RealWorld/kubeadm-join.yaml
 
-15. (Worker2) join cluster by command:
+18. (Worker2) join cluster by command:
 sudo su -
 swapoff -a
 kubeadm join --config /home/ubuntu/kubernetes_202005/WorkShop_2.5_Kubernetes_RealWorld/kubeadm-join.yaml
 exit
 htop
 
-16. (Master) Check Node in Cluster by command (This take 5 - 10 min):
+19. (Master) Check Node in Cluster by command (This take 5 - 10 min):
 watch kubectl get nodes
 
-17. (Master)Check Pods from all cluster system running by command:
+20. (Master)Check Pods from all cluster system running by command:
 watch kubectl get pods --all-namespaces
 
-18. (Master) Test deployment basic nginx pods by command
+21. (Master) Check IPVS mode on every kube-proxy by command:
+    kubectl get pods -n kube-system -o wide ==> Record kube-proxy name
+    kubectl logs kube-proxy-<XXXX> -n kube-system
+
+22 (Worker1) Check IPVS policy by ipvsadm
+	sudo apt-get update && sudo apt-get install -y ipvsadm
+	sudo ipvsadm
+	-------------------------------------------------
+	Example Result:
+	-------------------------------------------------
+IP Virtual Server version 1.2.1 (size=4096)
+Prot LocalAddress:Port Scheduler Flags
+  -> RemoteAddress:Port           Forward Weight ActiveConn InActConn
+TCP  ip-10-96-0-1.ap-southeast-1. lc
+  -> ip-10-0-1-64.ap-southeast-1. Masq    1      2          0         
+TCP  ip-10-96-0-10.ap-southeast-1 lc
+  -> ip-192-168-246-194.ap-southe Masq    1      0          0         
+  -> ip-192-168-246-195.ap-southe Masq    1      0          0         
+TCP  ip-10-96-0-10.ap-southeast-1 lc
+  -> ip-192-168-246-194.ap-southe Masq    1      0          0         
+  -> ip-192-168-246-195.ap-southe Masq    1      0          0         
+TCP  ip-10-104-200-71.ap-southeas lc
+  -> ip-192-168-246-196.ap-southe Masq    1      0          0         
+TCP  ip-10-105-46-223.ap-southeas lc
+  -> ip-192-168-246-197.ap-southe Masq    1      0          0         
+UDP  ip-10-96-0-10.ap-southeast-1 lc
+  -> ip-192-168-246-194.ap-southe Masq    1      0          0         
+  -> ip-192-168-246-195.ap-southe Masq    1      0          0 
+	-------------------------------------------------
+
+23 (Worker2) Check IPVS policy by ipvsadm
+	sudo apt-get update && sudo apt-get install -y ipvsadm
+	sudo ipvsadm
+	-------------------------------------------------
+	Example Result:
+	-------------------------------------------------
+IP Virtual Server version 1.2.1 (size=4096)
+Prot LocalAddress:Port Scheduler Flags
+  -> RemoteAddress:Port           Forward Weight ActiveConn InActConn
+TCP  ip-10-96-0-1.ap-southeast-1. lc
+  -> ip-10-0-1-64.ap-southeast-1. Masq    1      2          0         
+TCP  ip-10-96-0-10.ap-southeast-1 lc
+  -> ip-192-168-246-194.ap-southe Masq    1      0          0         
+  -> ip-192-168-246-195.ap-southe Masq    1      0          0         
+TCP  ip-10-96-0-10.ap-southeast-1 lc
+  -> ip-192-168-246-194.ap-southe Masq    1      0          0         
+  -> ip-192-168-246-195.ap-southe Masq    1      0          0         
+TCP  ip-10-104-200-71.ap-southeas lc
+  -> ip-192-168-246-196.ap-southe Masq    1      0          0         
+TCP  ip-10-105-46-223.ap-southeas lc
+  -> ip-192-168-246-197.ap-southe Masq    1      0          0         
+UDP  ip-10-96-0-10.ap-southeast-1 lc
+  -> ip-192-168-246-194.ap-southe Masq    1      0          0         
+  -> ip-192-168-246-195.ap-southe Masq    1      0          0 
+	-------------------------------------------------
+
+24. (Master) Test deployment basic nginx pods by command
 kubectl run webtest --image=labdocker/nginx:http2 --port=443
 kubectl get pods -o wide
 kubectl expose pods webtest --target-port=443 --type=NodePort
 kubectl get svc -o wide                                               ==> Record Public Port
 
-19. (Master) Test get web outside:
+25. (Master) Test get web outside:
 curl https://<public ip master>:xxxx -k
 curl https://<public ip node1>:xxxx -k
 curl https://<public ip node2>:xxxx -k
 
-20. (Master) Cleanup Lab by command:
+26. (Master) Cleanup Lab by command:
 kubectl delete pods/webtest
 kubectl delete svc/webtest
 
 ====================================== Create Ingress Controller====================================================
 
-21. (Master) Create ingress set:
-	21.1. Create mandatory resource by command: 
+27. (Master) Create ingress set:
+	27.1. Create mandatory resource by command: 
 	kubectl apply -f ~/kubernetes_202005/WorkShop_2.5_Kubernetes_RealWorld/ingress-nginx/deploy/static/mandatory.yaml
 	*Remark: If you need to modified config. Edit this file first
 	more ~/kubernetes_202005/WorkShop_2.5_Kubernetes_RealWorld/ingress-nginx/deploy/static/mandatory.yaml
@@ -224,7 +276,7 @@ data:
 [...]
 ========================================
 
-	21.2 Check file service:
+	27.2 Check file service:
 	more ~/kubernetes_202005/WorkShop_2.5_Kubernetes_RealWorld/ingress-nginx/deploy/static/provider/aws/service-l4.yaml
 ========================================
 Example:
@@ -250,14 +302,14 @@ metadata:
 [...]
 ========================================
 
-	21.3 Apply service and configuration as below:
+	27.3 Apply service and configuration as below:
 	kubectl apply -f ~/kubernetes_202005/WorkShop_2.5_Kubernetes_RealWorld/ingress-nginx/deploy/static/provider/aws/service-l4.yaml
 	kubectl apply -f ~/kubernetes_202005/WorkShop_2.5_Kubernetes_RealWorld/ingress-nginx/deploy/static/provider/aws/patch-configmap-l4.yaml
 
-	21.4 Check by command: 
+	27.4 Check by command: 
 	watch kubectl get pods -n=ingress-nginx
 
-	21.5 Collect external cname by command:
+	27.5 Collect external cname by command:
 	kubectl get svc -n=ingress-nginx	(This may take several miniute before finished) ==> Record "CNAME of ELB"
 ========================================
 Example:
@@ -265,7 +317,7 @@ NAME            TYPE           CLUSTER-IP       EXTERNAL-IP                     
 ingress-nginx   LoadBalancer   10.108.187.142   af4e0d29c410111e9a11002f20ffeb23-988151595.ap-southeast-1.elb.amazonaws.com   80:31252/TCP,443:31461/TCP   17s
 ========================================
 
-25. (Master) Test deploy ingress service
+28. (Master) Test deploy ingress service
 
 # Create Service/Pods/Deployment for webtest1 and webtest2 by command:
 	kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.3_Ingress_Network/webtest_deploy.yml
@@ -279,13 +331,13 @@ ingress-nginx   LoadBalancer   10.108.187.142   af4e0d29c410111e9a11002f20ffeb23
 	kubectl get ing -o wide
 	kubectl describe ing/ingresswebtest
 
-26. (Master/Local (MAC)) Test access website by command or browser:
+29. (Master/Local (MAC)) Test access website by command or browser:
 	curl http://<CNAME AWS's ELB> -H 'Host:webtest1.kuberneteslabthailand.com'
 	curl http://<CNAME AWS's ELB> -H 'Host:webtest2.kuberneteslabthailand.com'
 
-27. (Master) Delete Ingress by command:
+30. (Master) Delete Ingress by command:
 	kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.3_Ingress_Network/ingress_webtest.yml
 	
-28. (Master) Clean Up Lab:
+31. (Master) Clean Up Lab:
 	kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.3_Ingress_Network/webtest_deploy.yml
 	kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.3_Ingress_Network/webtest_deploy2.yml
