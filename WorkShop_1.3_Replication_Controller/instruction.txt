@@ -65,7 +65,6 @@ Note: This instruction will demonstrate about how to use RC for maintain avaliab
 	kubectl get rc webtest
 	kubectl get pods
 
-
 11. Check full detail of RC by command:
 	kubectl describe rc webtest
 

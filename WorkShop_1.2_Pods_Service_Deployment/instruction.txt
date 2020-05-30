@@ -78,7 +78,7 @@ This workshop will create Pods with multiple container
 	kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_1.2_Pods_Service_Deployment/multicontainer/webmodule_svc.yml
 	kubectl get svc
 
-5. Check ip address by command: ifconfig (Check: ens5 device)
+5. Check ip address by command: ip addr | grep ens5 (Check: ens5 device)
 
 6. Set environment for test by command:
 	export Server_IP=<Private IP>
