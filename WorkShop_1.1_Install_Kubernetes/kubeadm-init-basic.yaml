@@ -17,7 +17,12 @@ nodeRegistration:
   - effect: NoSchedule
     key: node-role.kubernetes.io/master
 ---
-apiServer:
+  kubeProxy:
+    config:
+      featureGates:
+        SupportIPVSProxyMode: true
+      mode: ipvs
+  apiServer:
   extraArgs:
     authorization-mode: Node,RBAC
     enable-admission-plugins: NamespaceLifecycle,LimitRanger,ServiceAccount,TaintNodesByCondition,Priority,DefaultTolerationSeconds,DefaultStorageClass,StorageObjectInUseProtection,PersistentVolumeClaimResize,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,RuntimeClass,ResourceQuota
