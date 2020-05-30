@@ -4,7 +4,7 @@ Link for download:
 3. Test docker command by running: 
     docker version
     docker run hello-world
-    kubectl version
+    kubectl version --client=true
 
 4. Clone workshop to aws machine by command: 
     cd ~/

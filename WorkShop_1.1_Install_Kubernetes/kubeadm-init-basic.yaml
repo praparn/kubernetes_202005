@@ -17,6 +17,10 @@ nodeRegistration:
   - effect: NoSchedule
     key: node-role.kubernetes.io/master
 ---
+apiVersion: kubeadm.k8s.io/v1beta2
+kind: ClusterConfiguration
+imageRepository: k8s.gcr.io
+kubernetesVersion: v1.18.3
   kubeProxy:
     config:
       featureGates:
@@ -28,7 +32,6 @@ nodeRegistration:
     enable-admission-plugins: NamespaceLifecycle,LimitRanger,ServiceAccount,TaintNodesByCondition,Priority,DefaultTolerationSeconds,DefaultStorageClass,StorageObjectInUseProtection,PersistentVolumeClaimResize,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,RuntimeClass,ResourceQuota
     "feature-gates": "RotateKubeletClientCertificate=true, RotateKubeletServerCertificate=true, TTLAfterFinished=true, EphemeralContainers=true, ServiceTopology=true, EndpointSlice=true"
   timeoutForControlPlane: 4m0s
-apiVersion: kubeadm.k8s.io/v1beta2
 certificatesDir: /etc/kubernetes/pki
 clusterName: KubernetesLab
 controlPlaneEndpoint: ""
@@ -40,9 +43,6 @@ dns:
 etcd:
   local:
     dataDir: /var/lib/etcd
-imageRepository: k8s.gcr.io
-kind: ClusterConfiguration
-kubernetesVersion: v1.18.0
 networking:
   dnsDomain: cluster.local
   podSubnet: 192.168.0.0/16 
