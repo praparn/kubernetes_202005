@@ -8,10 +8,18 @@ Note: This instruction will start lab for kubernetes's cluster for real workshop
     docker system prune -af
 	reboot
 
-	*Optional: For cleansig workshop on lab machine*
+	*Optional: For clean workshop and initial lab*
 	cd ~
 	rm -rf kubernetes_202005/
 	git clone https://github.com/praparn/kubernetes_202005.git
+	sudo su -
+    modprobe -- ip_vs
+    modprobe -- ip_vs_rr
+    modprobe -- ip_vs_wrr
+    modprobe -- ip_vs_sh
+    modprobe -- nf_conntrack_ipv4
+    lsmod | grep -e ip_vs -e nf_conntrack_ipv4
+    reboot 
 	
 1. Check "LAB" sheet for your group and inform your team for all node information like below:
 
@@ -78,13 +86,51 @@ tmux new -s Lab
 8. (Master) Check master readiness and dns by command (Take 5 - 10 min):
 	watch kubectl get pods --all-namespaces
 
+9. (Master) Check IPVS mode on kube-proxy by command:
+    kubectl get pods -n kube-system ==> Record kube-proxy name
+    kubectl logs kube-proxy-<XXXX> -n kube-system
+
+10 (Master) Edit configuration of "kube-proxy" and add schedule to "lc": least connection
+	kubectl get -n kube-system configmap/kube-proxy -o yaml > ~/kube-proxy-configmap.yml
+	sed -i -e 's/scheduler: ""/scheduler: "lc"/g' ~/kube-proxy-configmap.yml
+	more ~/kube-proxy-configmap.yml
+	kubectl apply -f ~/kube-proxy-configmap.yml
+
+11 (Master) Delete existing pods of kube-proxy for apply new configuration
+	kubectl get pods -n kube-system
+	kubectl delete pods/kube-proxy-<xxxx> -n kube-system
+	kubectl get pods -n kube-system
+	kubectl logs kube-proxy-<XXXX> -n kube-system
+
+12 (Master) Check IPVS policy by ipvsadm
+	sudo apt-get update && apt-get install -y ipvsadm
+	sudo ipvsadm
+	-------------------------------------------------
+	Example Result:
+	-------------------------------------------------
+IP Virtual Server version 1.2.1 (size=4096)
+Prot LocalAddress:Port Scheduler Flags
+  -> RemoteAddress:Port           Forward Weight ActiveConn InActConn
+TCP  ip-10-96-0-1.ap-southeast-1. lc
+  -> ip-10-0-1-28.ap-southeast-1. Masq    1      5          0         
+TCP  ip-10-96-0-10.ap-southeast-1 lc
+  -> ip-192-168-17-65.ap-southeas Masq    1      0          0         
+  -> ip-192-168-17-67.ap-southeas Masq    1      0          0         
+TCP  ip-10-96-0-10.ap-southeast-1 lc
+  -> ip-192-168-17-65.ap-southeas Masq    1      0          0         
+  -> ip-192-168-17-67.ap-southeas Masq    1      0          0         
+UDP  ip-10-96-0-10.ap-southeast-1 lc
+  -> ip-192-168-17-65.ap-southeas Masq    1      0          0         
+  -> ip-192-168-17-67.ap-southeas Masq    1      0          0 
+	-------------------------------------------------
+
 ========================================  Create Dashboard =====================================================================
-9. (Master) Create Dashboard by command:
+13. (Master) Create Dashboard by command:
 	kubectl create namespace kubernetes-dashboard
 	kubectl create secret generic kubernetes-dashboard-certs --from-file=$HOME/kubernetes_202005/WorkShop_1.7_Resource_Management/cert -n kubernetes-dashboard
 	kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_1.7_Resource_Management/dashboard-restrict.yml
 	
-10. (Master) Check Bearer Token for access by command:
+11. (Master) Check Bearer Token for access by command:
 	kubectl create -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_1.7_Resource_Management/user-restrict.yml
 	kubectl get secret -n kubernetes-dashboard 
 	kubectl describe secret <admin-user-token-xxx> -n kubernetes-dashboard
@@ -94,7 +140,7 @@ tmux new -s Lab
  eyJhbGciOiJSUzI1NiIsImtpZCI6ImZ6RnRXNmI3STdLR3VRS2lLSjU0LV9wU2hySzVKS1JDdXczQ2NkTmU4eVkifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlcm5ldGVzLWRhc2hib2FyZCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJhZG1pbi11c2VyLXRva2VuLTQ0Zm1nIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6ImFkbWluLXVzZXIiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiI3NmNjNWRiMC0yMWRlLTQyZTItOWMxNi1lYjExZDhkMTAyNmMiLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6a3ViZXJuZXRlcy1kYXNoYm9hcmQ6YWRtaW4tdXNlciJ9.Eoj6wFbMpeBbBYmnWx9IbeuHHDswsboWmtsmymFmRhAy0a8ivYs-yFYpOo1rIHte4EuKwGllIHbOIdyosWnpPXF_7q_yxhjTk1tfOPAzbyIFIzggasXJwIpTQReH7pu7cHE6dd4olJYtiklfI_UotM4VvvAGpL8xaWPRx8Am9laL11LJFccmiWaw9YjQlU1-1iMzSwVKWHkX990MGGNNr0hXSQSYPHYyjaiyU1RoSRjJyhwxXhV-nneB3qDqUjJiIVEtoAoIR0taQdrXYqxLiwdZGyfhsFJWNxlYhMGcLiLE-IH8TA_7kvTQg7pqJtkcfRiLUxmAajlrHNaiCEtPFQ
  	------------------------------------------------------------------------------------
 
-11. (Master) Open Kubernetes's forward for operate:
+12. (Master) Open Kubernetes's forward for operate:
 	kubectl get pods -n=kubernetes-dashboard
 	kubectl port-forward --address 0.0.0.0 pods/<kubernetes-dashboard-xxx> 8443:8443 -n=kubernetes-dashboard
 	(Ex: kubectl port-forward --address 0.0.0.0 pods/kubernetes-dashboard-7b5bf5d559-stwjc 8443:8443 -n=kubernetes-dashboard)
@@ -103,7 +149,7 @@ tmux new -s Lab
 	https://<Public IP>:8443
 ========================================  Create Dashboard =====================================================================
 
-12. (Worker1) Prepare configuration for initial kubernetes worker:
+13. (Worker1) Prepare configuration for initial kubernetes worker:
 cd ~
 sed -i -e 's/token: tokenid/token: <token id>/g' ~/kubernetes_202005/WorkShop_2.5_Kubernetes_RealWorld/kubeadm-join.yaml
 sed -i -e 's/sha256:cahash/<ca-cert-hash>/g' ~/kubernetes_202005/WorkShop_2.5_Kubernetes_RealWorld/kubeadm-join.yaml
@@ -111,7 +157,7 @@ sed -i -e 's/apiServerEndpoint: hostnamemaster:6443/apiServerEndpoint: <full nam
 sed -i -e 's/name: hostnameworker/name: <full name of worker1 node>/g' ~/kubernetes_202005/WorkShop_2.5_Kubernetes_RealWorld/kubeadm-join.yaml
 more ~/kubernetes_202005/WorkShop_2.5_Kubernetes_RealWorld/kubeadm-join.yaml
 
-13. (Worker1) join cluster by command:
+14. (Worker1) join cluster by command:
 sudo su -
 swapoff -a
 kubeadm join --config /home/ubuntu/kubernetes_202005/WorkShop_2.5_Kubernetes_RealWorld/kubeadm-join.yaml

@@ -52,3 +52,7 @@ scheduler:
   extraArgs:
     address: 0.0.0.0
     "feature-gates": "RotateKubeletClientCertificate=true, RotateKubeletServerCertificate=true, TTLAfterFinished=true, EphemeralContainers=true, ServiceTopology=true, EndpointSlice=true"
+---
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+kind: KubeProxyConfiguration
+mode: ipvs
