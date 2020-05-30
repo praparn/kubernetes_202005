@@ -10,30 +10,43 @@ Link for download:
     cd ~/
     git clone https://github.com/praparn/kubernetes_202005.git
 
-5. Initial kubernetes by command:
+5. Enable module for IPVS by command:
+    sudo su -
+    modprobe -- ip_vs
+    modprobe -- ip_vs_rr
+    modprobe -- ip_vs_wrr
+    modprobe -- ip_vs_sh
+    modprobe -- nf_conntrack_ipv4
+    lsmod | grep -e ip_vs -e nf_conntrack_ipv4
+    exit 
+
+6. Initial kubernetes by command:
     sudo su -
     kubeadm init --config /home/ubuntu/kubernetes_202005/WorkShop_1.1_Install_Kubernetes/kubeadm-init-basic.yaml
     exit
 
-6. Setup credential for regular user by command:
+7. Setup credential for regular user by command:
     cd ~/
    	mkdir -p $HOME/.kube
     sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
   	sudo chown $(id -u):$(id -g) $HOME/.kube/config
 	kubectl taint nodes --all node-role.kubernetes.io/master-
 
-7. Install network component by command:
+8. Install network component by command:
     kubectl apply -f https://docs.projectcalico.org/v3.11/manifests/calico.yaml
     watch kubectl get pods --all-namespaces
 
-8. Check Feature-Gate Configuration:
+9. Check IPVS mode on kube-proxy by command:
+    kubectl get pods --all-namespaces ==> Record kube-proxy name
+    kubectl logs -f kube-proxy-<XXXX> -n kube-system
+
+10. Check Feature-Gate Configuration:
     Controller Server: ps -ef | grep kube-controller-manager | grep feature-gate
     API Server: ps -ef | grep kube-apiserver | grep feature-gate
     Scheduler: ps -ef | grep kube-scheduler | grep feature-gate
     Kubelet: ps -ef | grep /usr/bin/kubelet | grep feature-gate
 
-
-9. Check Existing Certificate and CSR:
+11. Check Existing Certificate and CSR:
     sudo find /etc/kubernetes/pki/ -type f -name "*.crt" -print|egrep -v 'ca.crt$'|xargs -L 1 -t  -i bash -c 'openssl x509  -noout -text -in {}|grep After'
     kubectl get csr
 
