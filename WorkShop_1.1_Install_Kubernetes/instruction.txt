@@ -11,14 +11,17 @@ Link for download:
     git clone https://github.com/praparn/kubernetes_202005.git
 
 5. Enable module for IPVS by command:
-    sudo su -
-    modprobe -- ip_vs
-    modprobe -- ip_vs_rr
-    modprobe -- ip_vs_wrr
-    modprobe -- ip_vs_sh
-    modprobe -- nf_conntrack_ipv4
-    lsmod | grep -e ip_vs -e nf_conntrack_ipv4
-    exit 
+	sudo su -
+	cp /etc/modules /etc/modules_backup
+	echo "" > /etc/modules
+    echo "ip_vs" >> /etc/modules
+    echo "ip_vs_rr" >> /etc/modules
+    echo "ip_vs_wrr" >> /etc/modules
+    echo "ip_vs_sh" >> /etc/modules
+    echo "nf_conntrack_ipv4" >> /etc/modules
+	reboot
+    *After reboot check modprobe*
+    sudo lsmod | grep -e ip_vs -e nf_conntrack_ipv4
 
 6. Initial kubernetes by command:
     sudo su -

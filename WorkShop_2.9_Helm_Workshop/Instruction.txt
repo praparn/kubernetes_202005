@@ -9,15 +9,15 @@ Part0: Install Helm & Tiller
 
 2. Check helm readiness and update by command:
 	 helm list			==> Expect blank
-    helm repo update ==> Update helm
 
-    (Remark: Case to rollback and reinitial helm/tiller: helm reset --force)
+    (Remark: Case to rollback and reinitial helm: helm reset --force)
 
 ====================================================
 Part 1: Deploy grafana via helm:
 ====================================================
 1. Add stable repositories from kubernetes-charts:
 		helm repo add stable https://kubernetes-charts.storage.googleapis.com
+      helm repo update
 
 2. Install grafana helm by command
 		helm install helmgrafana --set service.type=NodePort stable/grafana
