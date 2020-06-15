@@ -101,7 +101,6 @@ kubectl --context=labreadonly-context run webtest --image=labdocker/nginx:http2 
 
 11. CleanUp Lab:
 kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/security-rolebinding-labsecurity.yml
-kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_2.4_Security/security-role-readonly.yml
 kubectl config delete-context labreadonly-context
 
 ============================================================================================================================================================
