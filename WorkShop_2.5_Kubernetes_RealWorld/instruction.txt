@@ -13,10 +13,10 @@ Note: This instruction will start lab for kubernetes's cluster for real workshop
 	cd ~
 	rm -rf kubernetes_202005/
 	git clone https://github.com/praparn/kubernetes_202005.git
-	sudo su -
 	-----------------------------------------------
 	*Optional2: Check for module enable (IF not run script below for enable)
 	-----------------------------------------------
+	sudo su -
 	cp /etc/modules /etc/modules_backup
 	echo "" > /etc/modules
     echo "ip_vs" >> /etc/modules
