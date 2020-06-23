@@ -42,9 +42,9 @@ Create Job for Monitor System via LINE:
 5. Check Detail of Job by command:
 	kubectl describe jobs/linenotify
 
-6. Monitor Result on LINE Application:
+6. Monitor Result on LINE Application: (5 Min)
 
-8. Open job_notify_cron.yml file and Edit Environment (vi job_notify_cron.yml):
+7. Open job_notify_cron.yml file and Edit Environment (vi job_notify_cron.yml):
 	        env:
         - name: TITLE
           value: "BOT NOTIFY:Praparn L."					==> Input Your Name
@@ -59,16 +59,16 @@ Create Job for Monitor System via LINE:
         - name: TOKEN
           value: "EIeqyillzkzpaCo1ROrebZTcGbIyzDZHpOjcdd0t6CX"	==> Input LINE TOKEN
 
-9. Create Job by command: (Monitor 5 - 6 min)
+8. Create Job by command: (Monitor 5 - 6 min)
 	kubectl create -f job_notify_cron.yml 
 	kubectl get cronjob -o wide
   watch kubectl get jobs
 
 
-10. Check Detail of Job by command:
+9. Check Detail of Job by command:
 	kubectl describe cronjob/linenotify
 
-11. Monitor Result on LINE Application:
+10. Monitor Result on LINE Application:
 
-12. Delete Cronjob by command:
+11. Delete Cronjob by command:
 kubectl delete -f job_notify_cron.yml 

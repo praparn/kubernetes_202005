@@ -50,7 +50,7 @@ docker image pull labdocker/cadvisor:latest
 	more mainlite.py
 	exit
 
-8. Clear environment by delete Pods and service by command:
+9. Clear environment by delete Pods and service by command:
 	kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_1.2_Pods_Service_Deployment/singlecontainer/webtest_pod.yml
 	kubectl delete -f https://raw.githubusercontent.com/praparn/kubernetes_202005/master/WorkShop_1.2_Pods_Service_Deployment/singlecontainer/webtest_svc.yml
 
