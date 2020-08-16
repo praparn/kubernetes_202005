@@ -5,8 +5,7 @@ Note: This instruction will start lab for kubernetes for ingress workshop
 	0.1 Create mandatory resource by command: 
 	kubectl apply -f ~/kubernetes_202005/WorkShop_2.5_Kubernetes_RealWorld/ingress-nginx/deploy/static/mandatory.yaml
 	*Remark: If you need to modified config. Edit this file first
-	more
-	 ~/kubernetes_202005/WorkShop_2.5_Kubernetes_RealWorld/ingress-nginx/deploy/static/mandatory.yaml
+	more ~/kubernetes_202005/WorkShop_2.5_Kubernetes_RealWorld/ingress-nginx/deploy/static/mandatory.yaml
 ========================================
 Example:
 [...]
