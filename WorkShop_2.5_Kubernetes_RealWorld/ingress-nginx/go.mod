@@ -23,7 +23,7 @@ require (
 	github.com/moul/pb v0.0.0-20180404114147-54bdd96e6a52
 	github.com/ncabatoff/process-exporter v0.6.0
 	github.com/onsi/ginkgo v1.12.0
-	github.com/opencontainers/runc v1.0.0-rc9
+	github.com/opencontainers/runc v1.0.0-rc95
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.4.0
 	github.com/prometheus/client_model v0.2.0
@@ -38,8 +38,8 @@ require (
 	github.com/yudai/golcs v0.0.0-20170316035057-ecda9a501e82 // indirect
 	github.com/yudai/pp v2.0.1+incompatible // indirect
 	github.com/zakjan/cert-chain-resolver v0.0.0-20180703112424-6076e1ded272
-	golang.org/x/net v0.0.0-20191004110552-13f9640d40b9
-	google.golang.org/grpc v1.26.0
+	golang.org/x/net v0.0.0-20201224014010-6772e930b67b
+	google.golang.org/grpc v1.27.0
 	gopkg.in/fsnotify/fsnotify.v1 v1.4.7
 	gopkg.in/gavv/httpexpect.v2 v2.0.0
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
