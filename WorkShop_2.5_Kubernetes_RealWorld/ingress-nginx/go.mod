@@ -38,7 +38,7 @@ require (
 	github.com/yudai/golcs v0.0.0-20170316035057-ecda9a501e82 // indirect
 	github.com/yudai/pp v2.0.1+incompatible // indirect
 	github.com/zakjan/cert-chain-resolver v0.0.0-20180703112424-6076e1ded272
-	golang.org/x/net v0.0.0-20191004110552-13f9640d40b9
+	golang.org/x/net v0.0.0-20201110031124-69a78807bb2b
 	google.golang.org/grpc v1.26.0
 	gopkg.in/fsnotify/fsnotify.v1 v1.4.7
 	gopkg.in/gavv/httpexpect.v2 v2.0.0
@@ -53,7 +53,7 @@ require (
 	k8s.io/code-generator v0.18.0
 	k8s.io/component-base v0.18.0
 	k8s.io/klog v1.0.0
-	k8s.io/kubernetes v1.18.0
+	k8s.io/kubernetes v1.18.19
 	pault.ag/go/sniff v0.0.0-20200207005214-cf7e4d167732
 	sigs.k8s.io/controller-runtime v0.5.1-0.20200327213554-2d4c4877f906
 )
